@@ -1,6 +1,6 @@
 # Operation Rivergate — release checklist
 
-## Release 3 — Rivergate capture and hold (current)
+## Release 3 — Rivergate capture and hold (complete)
 
 - Starting commit: `7873573`, branch `main`; date 2026-11-02 (Asia/Dhaka).
 - Target: existing free Render `srv-dbjis38ae00c73ec5vl0`,
@@ -11,9 +11,54 @@
 - [x] Play a winning mission against meaningful deterministic opposition.
 - [x] Update objective artwork, instructions/tutorial, history/results/resume display.
 - [x] Back up/rehearse migration preserving original rows, keys and legacy tables.
-- [ ] Release build, engine/PostgreSQL/HTTP/tutorial/deployment checks and browser layouts.
-- [ ] Commit/push, green CI, deploy and verify exact live source and old/new saves.
-- [ ] Record evidence and stop after Release 3.
+- [x] Release build, engine/PostgreSQL/HTTP/tutorial/deployment checks and browser layouts.
+- [x] Commit/push, green CI, deploy and verify exact live source and old/new saves.
+- [x] Record evidence and stop after Release 3.
+
+- Deployed source: `dfe0495ec1c467733ddd6518fba5c76c60050d9a`.
+  [Corrected CI passed](https://github.com/eusha06/TACTICSIM/actions/runs/41344313480):
+  83 engine + 19 PostgreSQL tests, eight tutorial tests, migrations, publish,
+  production Docker/TLS, complete mission win/defeat and container replacement.
+  Initial CI exposed a split-query event-counter race; fixed with consistent
+  graph loads and repeated concurrent-round coverage before deployment.
+- Render `dep-dbjpkccs728c738ffjbg` showed **Deploy succeeded | Live**.
+  `/health` returned 200/healthy with the exact source SHA. Published SVG,
+  fingerprinted CSS/site JS/tutorial JS matched source byte-for-byte.
+- Private local and hosted backups were restored and upgraded in separate local
+  databases before production. After deployment, every original hosted row's
+  old-column hash remained present across all six tables, including the key ring.
+  All 21 old matches retained Elimination/null/zero defaults; no reset/reseed.
+- Retained pre-Release-1 cookie restored exact turn-3 legacy game; old attack
+  receipt replayed without applying damage again; protected Resume preserved it.
+- Full public HTTPS suite passed CSRF, forged cookie/two-owner isolation,
+  stale/idempotent/concurrent commands, completed locking, history/review/Resume,
+  and New Match preserving results. Actual capture victory turn 17 and defeat
+  turn 14 passed, including 1/2-round refresh/New Match/Resume and duplicate hold.
+- Native Chrome played the live winning route: enemy contested F4, killed two
+  friendlies; clearing all enemies left 0/2. Artillery occupied F4 for 1/2.
+  Requested Render Restart service; logs confirmed new instance `qrlxr` started
+  after `5zzbh`, with no pending migrations. Same private cookie then restored
+  Turn 15, 1/2 and Artillery 8 HP. History/Resume preserved them; End Turn yielded
+  2/2 and Mission success on turn 17. No extra command or round credited on reload.
+- Desktop and emulated 375×667 layouts inspected, including empty/occupied
+  outpost, progress, success and help. Live mobile Replay Tutorial + select
+  Infantry + Down/Enter move reached the capture/End Turn explanation only after
+  the accepted A1→A2 move, with keyboard focus retained.
+
+No access blocker or observed functional defect remains. Free compute cold
+starts remain; mobile was emulated rather than tested on physical devices. The
+opponent is deterministic and greedy; this verifies a meaningful contest and
+winning route, not exhaustive strategy/balance analysis. Stop after Release 3.
+
+Manual play check:
+1. Begin Operation; find the F4 outpost and 0/2 indicator. Follow or replay the tutorial.
+2. Advance by legal land routes and attack threats. Keep a living blue unit on F4.
+3. End Turn: the count advances only after the opponent finishes. Moving off or
+   losing the holder resets it; losing the squad fails. Clearing enemies still
+   requires holding and ending rounds.
+4. At 1/2 refresh, open History and Resume; verify progress/health/actions remain.
+5. Complete another held round for success. Review the result; an older save
+   still says Legacy elimination and wins by defeating its opposing squad.
 
 ## Release 2 — briefing and guided interaction (complete)
 

@@ -33,7 +33,7 @@ Legacy elimination matches: a side wins immediately when every opposing unit has
 
 The computer processes living units by ascending ID. It attacks immediately when possible; otherwise it chooses among legal moves and staying still, preferring the smallest distance to an enemy's valid attack band, then nearest enemy distance, then cheapest movement cost, then row and column. It attacks the legal target with lowest health, breaking ties by ID, then ends the turn unless it won. It uses the same Game queries and commands as the human. This bounded greedy opponent can wait behind obstacles; it does not plan several turns ahead.
 
-`Game` owns copies of its units and exposes read-only state. Its commands receive the acting side and validate turn/unit ownership. The Web layer derives the match owner from a protected browser cookie and always uses Human for visitor commands; a client-supplied side is not authentication. PostgreSQL stores snapshots and history, while Razor Pages antiforgery and atomic database version/receipt checks protect the HTTP boundary.
+`Game` owns copies of its units and exposes read-only state. Its commands receive the acting side and validate turn/unit ownership. The Web layer derives the match owner from a protected browser cookie and always uses Human for visitor commands; a client-supplied side is not authentication. PostgreSQL stores relational match/unit state and history, while Razor Pages antiforgery and atomic database version/receipt checks protect the HTTP boundary.
 
 ## Rivergate mission (Release 3)
 

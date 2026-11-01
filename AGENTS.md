@@ -52,7 +52,10 @@
 
 A test, deployment, or browser check is only marked passed after observing its result. Historical results in `docs/verification.md` are evidence for that earlier revision, not a substitute for checking a new release. The Development restart script now targets Release binaries. `scripts/verify_deployment.py` separately checks a Production container through a local TLS edge and replaces that container; neither is proof of a deployed Render service.
 
-## Release 3 authorization
+## Release 3 authorization (completed)
+
+- Live source `dfe0495ec1c467733ddd6518fba5c76c60050d9a` verified at
+  https://tacticsim.onrender.com/; see the release checklist. Stop after Release 3.
 
 - Release 3 is authorized: new Rivergate capture-and-hold matches, one reachable
   land outpost, two consecutive completed human/computer rounds of friendly

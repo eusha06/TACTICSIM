@@ -4,11 +4,12 @@ A small fictional turn-based tactical simulation for a C#/.NET portfolio.
 
 **Current status: playable MVP at [tacticsim.onrender.com](https://tacticsim.onrender.com/).** The Razor Pages board connects to the C# engine using plain JavaScript fetch calls. It includes terrain, unit intel, legal-action highlights, human/computer turns, victory/defeat, New Match, action history, automatic save/resume, and recent completed results. PostgreSQL stores matches, units, ordered events, and accepted commands in relational tables. The Match history page retains earlier matches and can resume an unfinished one. A complete match and refresh/New Match were verified through Chrome controls, along with a 375px mobile layout; see the [verification record and manual checks](docs/verification.md).
 
-**Release 3 implementation:** new operations capture F4 and hold it through two
+**Release 3 verified live (`dfe0495`):** new operations capture F4 and hold it through two
 completed human/computer rounds. Losing occupancy resets progress; losing the
 squad fails. Clearing all enemies still requires the hold. Existing saves keep
 elimination rules. See [rules](docs/rules.md) and the [release checklist](docs/release-checklist.md)
-for current deployment acceptance.
+for deployment acceptance, including preserved legacy saves and 1/2-round
+continuity across a hosted restart.
 
 **Release 2 verified live (`7296834`):** a focused briefing with explicit Begin/Continue, in-game help
 using C# unit/terrain values, and a three-step introduction driven by selection

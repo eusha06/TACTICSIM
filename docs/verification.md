@@ -1,5 +1,40 @@
 # Verification record
 
+## Live Release 3 acceptance (2026-11-02)
+
+https://tacticsim.onrender.com/ runs
+`dfe0495ec1c467733ddd6518fba5c76c60050d9a`. Render deployment
+`dep-dbjpkccs728c738ffjbg` showed Deploy succeeded | Live; health returned
+200/healthy and that revision. [CI passed](https://github.com/eusha06/TACTICSIM/actions/runs/41344313480)
+with 102 .NET tests, eight tutorial tests, migration/model/publish checks and
+production Docker/TLS/mission/replacement/outage checks. Published assets matched
+source byte-for-byte. The earlier failing CI race was fixed before deployment.
+
+The additive mission migration applied successfully on the actual host. A
+read-only audit found every original old-column row hash unchanged across
+DataProtectionKeys, GameMatches, GameSessions, MatchCommands, MatchEvents and
+MatchUnits; every old match retained elimination defaults. Pre-Release-1 cookie
+and exact old save survived, as did its original cached attack receipt (no
+second damage) and protected Resume.
+
+The full live HTTP suite passed gameplay/security/history/resume. Dedicated
+mission tests won on turn 17 and lost on turn 14, with the opponent contesting
+F4, two friendly losses on the winning route, no elimination shortcut, 0→1→2,
+duplicate/stale hold protection and 1/2-round refresh/New Match/Resume/review.
+
+Native Chrome completed the same winning route on the public URL. At Turn 15,
+1/2 and Artillery 8 HP on F4, Render Restart service launched instance `qrlxr`
+(previously `5zzbh`), visibly logging startup and no unapplied migrations. The
+same private browser refreshed to the same partial hold and unit state;
+History/Resume preserved them and End Turn won at 2/2 on Turn 17. Desktop and
+375×667 mobile layouts, mission help, occupied marker and success were inspected.
+Replay Tutorial followed selection + a successful keyboard A1→A2 move to the
+mission-specific third step. No timers advanced it.
+
+No access blockers remain. Mobile is Chrome emulation, not a physical-device
+claim; the free host can cold-start. See the current release checklist for the
+manual play steps. No subsequent release has been implemented.
+
 ## Release 3 local acceptance (2026-11-02)
 
 Release build with warnings as errors passed: zero warnings/errors. All 102 .NET

@@ -1,5 +1,49 @@
 # Verification record
 
+## Live Release 1 acceptance — 2026-11-01
+
+https://tacticsim.onrender.com/ is serving
+`b3874838971b2320968c44a9cc16427e11f061f3`. Render deployment
+`dep-dbjnbo49v7es73ak5p00` showed **Deploy succeeded** on the existing free
+service. `/health` returned HTTP 200, `healthy`, and that exact revision.
+[CI for this source passed](https://github.com/eusha06/TACTICSIM/actions/runs/41331025556):
+Release build, all 83 tests, migration/publish checks and production Docker/TLS/
+container replacement checks. The production asset check now includes the
+versioned SVG. Live SVG and fingerprinted CSS/JavaScript bodies were compared
+with the committed files and were byte-identical.
+
+A private pre-deployment test owner retained its cookie across deployment.
+Match `17fbcda5-242e-4980-89d0-b1a6672f20b5` restored **exactly**, including
+versions, turn 3, all units/positions/health, spent actions and ordered history.
+Resume retained its 11-HP enemy Armor and used Artillery actions. No migration,
+rule/endpoint change, key-ring replacement or data reset was introduced.
+
+The complete HTTP suite passed against the deployed HTTPS origin with verified
+TLS: computer victory on turn 14 after seven human attacks; action limits,
+New Match/results, refresh/history/review/resume, independent owners, foreign
+access rejection, antiforgery, forged cookies, duplicate/stale commands and
+concurrent writes. These checks created only their own anonymous test matches.
+
+Visible Chrome checks on the deployed version:
+
+- Desktop layout and iPhone SE 375×667 emulation inspected. Original blue/orange
+  soldier squads, tracked vehicles and field guns render; forest clusters,
+  raised hills, restrained grass and connected water match the fixed terrain.
+  Corrected narrow labels fit their cells. No crossing spans water.
+- Infantry A1→A3, Armor B1→B4, Artillery C1→E1, End Turn and computer response.
+  Artillery E1→G1 then G5 attack: Armor 16→11 HP, health bar changes and action lock.
+- Move completion restored focus; Right navigated to B3 and Escape deselected.
+  Native buttons retain Enter/Space activation. Reduced-motion CSS disables
+  transitions/animations; no movement animation was added.
+- Squad selection and compact details, refresh, action history and help disclosures,
+  New Match cancellation and confirmation, preserved earlier match in History,
+  then Resume returning turn 3 and the 11-HP Armor. Browser test match:
+  `b7bb0755-09d3-40dd-b95e-84800ecf2f41`.
+
+No functional defect remains from these checks. Mobile checks used emulation,
+not physical hardware; free-host cold starts remain. Only release-record docs
+were updated after the deployed implementation. Stop after Release 1.
+
 ## Release 1 local checks — 2026-11-01
 
 - Release build with warnings as errors: zero warnings/errors.
@@ -22,8 +66,8 @@
 - Native browser access intermittently timed out or changed active windows;
   successful observations above were made after raising the dedicated test window.
 
-Live Release 1 deployment and final responsive checks are pending below the
-current checklist, not inferred from these local results.
+Live deployment and final responsive acceptance are recorded above separately
+from these local results.
 
 ## Live Release 0 acceptance — 2026-11-01
 

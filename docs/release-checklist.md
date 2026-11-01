@@ -1,6 +1,6 @@
 # Operation Rivergate — release checklist
 
-## Release 1 — illustrated battlefield (current)
+## Release 1 — illustrated battlefield (complete)
 
 - Scope: original SVG Infantry/Armor/Artillery and terrain, connected water,
   dominant responsive battlefield, accessible selection/action/health feedback.
@@ -12,9 +12,36 @@
 - [x] Implement original local SVG assets and responsive accessible board.
 - [x] Release build, 70 engine/13 PostgreSQL tests, no model drift, full HTTP checks.
 - [x] Inspect desktop and 375×667 layouts, keyboard focus and browser move/attack/turn/refresh/history.
-  Final deployed responsive inspection remains required after the label-spacing correction.
-- [ ] Commit/push, observe CI, deploy exact source, verify live revision and UI.
-- [ ] Verify existing saved-match continuity; record results and stop after Release 1.
+  Deployed responsive inspection also passed after the label-spacing correction.
+- [x] Commit/push `b3874838971b2320968c44a9cc16427e11f061f3`; observed
+  [successful CI](https://github.com/eusha06/TACTICSIM/actions/runs/41331025556),
+  including published SVG availability and production TLS/container replacement.
+- [x] Render deployment `dep-dbjnbo49v7es73ak5p00` showed **Deploy succeeded**;
+  `/health` returned HTTP 200/healthy and that exact runtime revision.
+- [x] Published SVG and fingerprinted CSS/JavaScript returned 200 and matched
+  the committed files byte for byte. Deployed desktop and 375×667 mobile
+  screenshots inspected; corrected labels no longer overlap adjacent cells.
+- [x] Pre-deployment owner cookie restored EXACT match
+  `17fbcda5-242e-4980-89d0-b1a6672f20b5`, including turn 3, all units/positions,
+  11-HP enemy Armor, spent actions, versions and ordered history. Resume preserved them.
+- [x] Full deployed HTTP gameplay/security suite passed: complete match (turn 14,
+  seven attacks), owner isolation, CSRF, stale/idempotent/concurrent commands,
+  history/review/resume, completion locking and New Match preserving results.
+- [x] Deployed mobile browser: select/move all three types, arrow focus/Escape,
+  End Turn/computer response, move Artillery G1 and attack G5 (16→11), unit details,
+  refresh, history/help disclosures, New Match cancel/confirm, and Resume of the
+  earlier wounded match all passed. No gameplay/server/persistence files changed.
+- [x] Record actual checks, commit/push release documentation, stop after Release 1.
+
+Remaining limitations: free-host cold starts; mobile was emulated in Chrome,
+not tested on physical devices. No functional defect remains from these checks.
+No mission objectives or following-release features were added.
+
+Manual play check: select each miniature → inspect round move markers → move →
+End Turn → select Artillery and a dashed attack target → inspect health/history →
+refresh → New Match → Match history → Resume the earlier match. Use Tab/arrows,
+Enter/Space and Escape to confirm keyboard access. At narrow widths, scroll to
+End Turn and selected-unit details below the board.
 
 ## Release 0 — completed
 
@@ -260,4 +287,5 @@ a future configuration update. Free compute cold starts remain an operational li
    redeploy the same service, then refresh/resume and compare. Check an older
    pre-release save if one exists. Finish a match and review its retained result.
 
-Stop after Release 0. No following-release implementation is authorized here.
+Release 0 stopped at its original gate. The separately authorized Release 1 is
+recorded above; stop after Release 1. No following release is authorized.

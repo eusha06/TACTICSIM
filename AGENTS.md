@@ -54,7 +54,9 @@ A test, deployment, or browser check is only marked passed after observing its r
 
 ## Release 1 authorization
 
-- Release 1 is authorized: illustrated miniature battlefield with original local
+- Release 1 was completed and verified at `https://tacticsim.onrender.com` on
+  2026-11-01, deployed source `b3874838971b2320968c44a9cc16427e11f061f3`.
+  Its bounded authorization was: illustrated miniature battlefield with original local
   SVG terrain and recognizable Infantry, Armor and Artillery, accessible responsive
   controls and clear action/health feedback. No mission objectives or rule changes.
 - Preserve existing endpoints, save data, map/coordinates, victory, ownership,

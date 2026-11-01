@@ -6,8 +6,10 @@ or add a payment method. The existing unrelated application was observed using
 Render's Free compute plan; TacticSim can use that same plan as a separate Docker
 service. Render has assigned `https://tacticsim.onrender.com` to the new free
 service. It is verified healthy on 2026-11-01 at commit
-`a66c3e8b8e2bbc556aeb10cf89c870e064aea9c4`; live play, ownership/security
-checks and saved-match continuity across a Render restart passed.
+`b3874838971b2320968c44a9cc16427e11f061f3` (Release 1); live desktop/mobile
+play, ownership/security checks and exact saved-match continuity across deployment
+passed. The established Release 0 deployment/restart checks are recorded in
+[verification.md](verification.md). Release 1 needed no schema migration.
 
 `render.yaml` selects **free** web compute and an explicitly supplied PostgreSQL
 connection. It creates no database. The fixed .NET 10 image, server rules,

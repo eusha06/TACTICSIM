@@ -13,13 +13,21 @@
   an unidentified host elsewhere.
 - Prepared fallback: root `Dockerfile`, `.dockerignore`, `render.yaml`.
   [Account steps and migration/backup procedure](deployment.md).
-- Exact access blockers: no intended Render service/workspace/URL or production
-  database identified; no Render CLI/API key configured; available Render
-  integration is not installed/connected. An installation/connection option was
-  offered. No account, purchase, production database, or hosting service was created.
-- Browser blocker: Chrome automation reported “The user changed ... Google
-  Chrome” and then `js execution timed out; kernel reset` on both refreshed-state
-  and 12-second get-app retries. No new visual browser check is claimed.
+- Follow-up baseline: `b03468de7571b016eb60831a94e4f67696ea73f4`, already pushed
+  with [successful CI](https://github.com/eusha06/TACTICSIM/actions/runs/41300826593).
+  Runtime implementation required no further change during revalidation.
+- Render browser account access has now been observed. The inspected project
+  has one unrelated Node service and no TacticSim service/database. The Render
+  CLI is absent and its plugin is not installed/connected; neither prevents
+  using the signed-in browser when resource creation is approved.
+- Current deployment blocker: TacticSim production resources are unprovisioned.
+  Prepared, unsubmitted forms quote web compute $7/month and PostgreSQL 17,
+  256 MB/1 GB storage $6.30/month ($13.30/month base plus usage/taxes).
+  Explicit recurring-spend approval was requested and has not been received.
+  No resource, purchase, production database, or hosting service was created.
+- Chrome automation initially reported focus-change errors/timeouts; subsequent
+  recovery allowed the local browser checks below. Live browser acceptance
+  remains unperformed because no TacticSim deployment exists.
 
 ## Implementation
 
@@ -92,6 +100,36 @@ All results below are local/test evidence, not a Render deployment check.
   `--environment`; operator flags now removed before ASP.NET argument parsing.
   Also corrected test assumptions for HttpOnly attribute casing and localhost
   HSTS exclusions; all affected checks reran successfully.
+
+### Follow-up verification of the pushed source
+
+- [x] Rebuilt Release with warnings as errors; all 83 tests passed again and EF
+  reported no model drift at `b03468d`.
+- [x] Rebuilt `tacticsim:release0` with `SOURCE_REVISION=b03468de7571b016eb60831a94e4f67696ea73f4`;
+  reran the complete production TLS/PostgreSQL/container-replacement script with
+  that expected revision. All checks passed; the match ended on turn 16 with six
+  human attacks. It used only disposable Docker resources.
+- [x] Real private Chrome window on `http://127.0.0.1:5183`: selected and moved
+  Infantry A1→A3, Armor B1→B4, Artillery C1→E1; ended the turn and saw the computer
+  response. Moved Artillery E1→G1 and attacked Armor G5: 16→11 HP, with the exact
+  five-damage event and spent actions visible.
+- [x] Refreshed, opened History, and used Resume. Turn 3, damaged health, positions
+  and Artillery's locked move/used attack persisted. Desktop board inspected in
+  a screenshot; no UI/rule changes made.
+- [x] Stopped that local server, started a new process, and refreshed the same
+  private browser. Its cookie still restored the original match/history/action
+  limits. This used a Release DLL in **Development**; production database keys
+  were separately verified by the Production container-replacement check.
+- [x] Confirmed New Match through its dialog, observed a fresh board, then used
+  History to resume the earlier unfinished operation with its 11-HP enemy and
+  spent Artillery actions intact. Both operations remained listed.
+- [x] Excluding only this new browser-test owner, all five original game tables
+  and three legacy backup tables still match the counts/content checksums in
+  the retained pre-release backup. No earlier matches/backups were changed.
+- [x] Inspected actual Render creation forms, selected PostgreSQL 17/1 GB with
+  autoscaling off, and prepared web Docker/migration/health settings from the
+  public repository. Forms are drafts only; creation awaits spend approval and
+  the real database connection must be supplied after provisioning.
 
 ## Publishing and live acceptance
 

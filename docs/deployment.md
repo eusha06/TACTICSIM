@@ -5,6 +5,16 @@ prepared deployment definition, not evidence of a live deployment. It uses the
 existing Razor Pages app, .NET 10 Docker runtime, and an explicitly supplied
 PostgreSQL database. It creates no database and changes no game rules.
 
+Follow-up on 2026-11-01: Chrome reached a signed-in Render workspace. The
+inspected project contains an unrelated service and no TacticSim resources.
+Unsubmitted TacticSim creation forms were prepared in Singapore: PostgreSQL 17,
+256 MB compute, 1 GB storage, autoscaling off (**$6.30/month**), and Docker web
+compute, 512 MB (**$7/month**). The observed base total is **$13.30/month**, before
+any usage charges/taxes. Prices must be reviewed again before creation. No
+resource, subscription, payment, production database, or deployment was created.
+Explicit approval of these recurring charges is pending. A draft's name is not
+an assigned URL. The existing local database and its backups remain intact.
+
 ## Render account steps
 
 1. Sign in to the intended Render workspace. If a TacticSim service already
@@ -15,11 +25,30 @@ PostgreSQL database. It creates no database and changes no game rules.
    saved games; do not rely on an expiring disposable database. Prefer the same
    Render region/private network as the web service. Existing data must be moved
    using a verified backup/restore if changing providers, never by starting with
-   an empty replacement. Keep the original database/backups intact.
-3. Create a Blueprint from `eusha06/TACTICSIM`, `main`, repository-root
-   `render.yaml`. It specifies a **paid Starter web service** because the
-   pre-deploy migration hook requires paid compute. Review the account's current
-   pricing before creation. No purchase was performed by this release.
+   an empty replacement. Keep the original database/backups intact. PostgreSQL
+   **17** matches the integration tests; the current creation form defaults to 18,
+   so select 17 explicitly. The prepared database name/user are `tacticsim`.
+3. Use **New Web Service → Public Git Repository** with
+   `https://github.com/eusha06/TACTICSIM.git` when the Git Provider integration
+   does not expose this repository (as observed in the inspected account).
+   This avoids expanding GitHub permissions. Use the settings below, matching
+   `render.yaml`. Alternatively, create a Blueprint from `main` and root
+   `render.yaml` if that repository is already authorized. The configured **paid
+   Starter web service** supports the pre-deploy migration hook. Review current
+   pricing and approve the recurring charges before submitting either creation
+   form. No purchase was performed by this release.
+
+   | Setting | Value |
+   | --- | --- |
+   | Source | Public repository above, branch `main` |
+   | Language | Docker (automatically detected) |
+   | Region | Singapore, matching the prepared PostgreSQL database |
+   | Root directory | Empty (repository root) |
+   | Docker build context / Dockerfile | `.` / `./Dockerfile` |
+   | Docker command | Empty; use the image's `CMD` |
+   | Health check | `/health` |
+   | Pre-deploy command | `dotnet TacticSim.Web.dll --migrate` |
+   | Auto-deploy | Off; deploy reviewed commits manually |
 4. Set secret **`ConnectionStrings__DefaultConnection`** in Render's environment
    to an **Npgsql key/value connection string**, not Render's `postgresql://` URL:
 
@@ -35,7 +64,11 @@ PostgreSQL database. It creates no database and changes no game rules.
    in the provider's secret store, never Git, a Docker build argument, or logs.
    Restrict database access to the application/operator and migration role.
 5. Set **`AllowedHosts`** to the service's actual assigned hostname (and any
-   intended custom hostname, separated with `;`, without schemes/ports).
+   intended custom hostname, separated with `;`, without schemes/ports). If the
+   hostname is assigned only after creation, use `*.onrender.com` for the initial
+   Render-domain deployment, then narrow it to the actual assigned hostname
+   before final acceptance. Do not guess a URL. Custom domains need their own
+   explicit entries.
    Keep `PORT=10000`, `ASPNETCORE_ENVIRONMENT=Production`, and
    `ReverseProxy__Enabled=true` as defined in the Blueprint. No Docker start
    override is needed. Root Docker context and `./Dockerfile` are required.
@@ -50,9 +83,11 @@ PostgreSQL database. It creates no database and changes no game rules.
    `release-checklist.md`, then restart/redeploy the same service and repeat
    refresh/history/resume with the same browser cookie.
 
-The account/service URL, production connection, backup confirmation, and
-authenticated deployment access are required to perform these steps. They were
-not available during local implementation; no deployment URL is invented here.
+The production connection, backup confirmation, service URL, and resource/billing
+approval are required to finish these steps. Browser account access was recovered
+on follow-up; the intended production resources have not been created and no
+deployment URL has been assigned or verified. The Render plugin is available but
+not installed/connected; it is an alternative to the signed-in browser workflow.
 
 ## Container and proxy behavior
 

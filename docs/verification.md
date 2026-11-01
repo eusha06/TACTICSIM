@@ -32,10 +32,26 @@ revision check, published JavaScript/CSS, the exact Render migration command,
 TLS/full match/security checks and container replacement. Repeated local games
 ended on turns 14 and 16 depending on the deliberate concurrent move race.
 
-**No deployed URL or visual browser check is claimed for Release 0.** Chrome
-automation timed out after a focus-change error, including a get-app retry.
-Render service/database/URL and authenticated deployment access are missing; the
-Render integration was found available but not installed/connected. Follow
+**No deployed URL/check is claimed for Release 0.** Initial Chrome automation
+failed with focus-change errors/timeouts; access recovered on follow-up.
+At pushed revision `b03468de7571b016eb60831a94e4f67696ea73f4`, Release build,
+83 tests, EF consistency and the production Docker/TLS/replacement check all
+passed again. A real private Chrome session also verified New Match, all unit
+types moving, attack (Armor 16→11 HP), End Turn, refresh, History and Resume.
+The same browser retained health, positions, turn, history and used Artillery
+actions across an actual local server restart. This visual check used the
+Release DLL in Development on port 5183; Production key persistence was checked
+separately by replacing the Docker container through a local TLS edge.
+
+The original database/legacy table checksums still match the retained backup
+after excluding only that new test owner. Existing matches and backups remain
+intact. The fresh full HTTP match ended on turn 16 with six human attacks.
+
+Render's signed-in workspace is now accessible in Chrome. The inspected project
+has no TacticSim service/database. Draft creation forms show $7/month web compute
+and $6.30/month PostgreSQL 17 with 1 GB storage; recurring-charge approval is
+pending. No resources were created. The Render plugin remains unconnected.
+Follow
 [deployment.md](deployment.md) for precise account steps and
 [release-checklist.md](release-checklist.md) for pending live checks. Historical
 browser results below describe the earlier MVP only.

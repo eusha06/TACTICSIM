@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#111b20" />
+    <meta name="description" content="TacticSim: a small, deterministic tactical game. Command your squad on an 8 by 8 battlefield." />
+    <title>@ViewData["Title"] · TacticSim</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <a class="skip-link" href="#main">Skip to battlefield</a>
+    <header class="topbar">
+        <a class="brand" asp-page="/Index"><span class="brand-mark" aria-hidden="true">▦</span> TACTIC<span>SIM</span></a>
+        <nav class="main-nav" aria-label="Primary"><a asp-page="/Index">Battlefield</a><a asp-page="/History">Match history</a></nav>
+        <span class="edition">FIELD EDITION <b>01</b></span>
+    </header>
+    <main id="main">@RenderBody()</main>
+    <footer class="site-footer"><span>TACTICS, WITHOUT THE CHANCE.</span><span>A fictional tactical simulation · C# / .NET</span></footer>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

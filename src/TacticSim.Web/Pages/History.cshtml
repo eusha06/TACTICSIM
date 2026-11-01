@@ -1,0 +1,70 @@
+@page
+@model HistoryModel
+@{
+    ViewData["Title"] = "Match history";
+}
+<div class="game-shell">
+    <div class="page-heading">
+        <div><p class="eyebrow">YOUR OPERATIONS</p><h1>Match history<span>.</span></h1><p class="intro">Resume unfinished matches or review your squad's past operations in this browser.</p></div>
+        <a class="button secondary" asp-page="/Index">Back to battlefield</a>
+    </div>
+    @if (Model.ErrorMessage is not null)
+    {
+        <div class="error-banner" role="alert">@Model.ErrorMessage</div>
+    }
+    <section class="panel match-history" aria-label="Your matches">
+        @if (Model.Matches.Count == 0)
+        {
+            <h2>No saved matches yet.</h2><p class="empty-state">Start a match on the battlefield. Progress is saved after each accepted command.</p>
+        }
+        @foreach (var match in Model.Matches)
+        {
+            <article class="match-row" data-match-id="@match.MatchId">
+                <div>
+                    <h2>Operation @match.MatchId.ToString("N")[..8] @if (match.IsActive) { <span class="subtle-badge">Current</span> }</h2>
+                    <p class="match-meta">@match.CreatedAt.ToString("yyyy-MM-dd HH:mm 'UTC'") · Turn @match.TurnNumber · @match.EventCount history entries</p>
+                    <p class="match-status">@(match.Winner is null ? "In progress" : match.Winner == "Human" ? "Victory" : "Defeat")</p>
+                </div>
+                <div class="match-actions">
+                    <a class="button secondary" asp-page="/History" asp-route-matchId="@match.MatchId">Review</a>
+                    @if (match.Winner is null)
+                    {
+                        <form method="post" asp-page-handler="Resume">
+                            <input type="hidden" name="CommandId" value="@Guid.NewGuid()" />
+                            <input type="hidden" name="ExpectedVersion" value="@(Model.CurrentState?.Version ?? 0)" />
+                            <input type="hidden" name="CurrentMatchId" value="@Model.CurrentState?.MatchId" />
+                            <input type="hidden" name="ExpectedMatchVersion" value="@Model.CurrentState?.MatchVersion" />
+                            <input type="hidden" name="TargetMatchId" value="@match.MatchId" />
+                            <button class="button primary" type="submit">Resume</button>
+                        </form>
+                    }
+                </div>
+            </article>
+        }
+    </section>
+    @if (Model.SelectedMatch is { } selected)
+    {
+        <section class="panel saved-detail" aria-label="Selected match details">
+            <p class="eyebrow">OPERATION @selected.MatchId.ToString("N")[..8]</p>
+            <h2>Turn @selected.TurnNumber · @(selected.Winner is null ? "In progress" : selected.Winner == "Human" ? "Victory" : "Defeat")</h2>
+            <div class="table-scroll">
+                <table class="unit-table">
+                    <thead><tr><th>Side</th><th>Unit</th><th>Position</th><th>Health</th><th>Move used</th><th>Attack used</th></tr></thead>
+                    <tbody>
+                    @foreach (var unit in selected.Units)
+                    {
+                        <tr><td>@(unit.Side == "Human" ? "You" : "Opponent")</td><td>@unit.Type</td><td>@((char)('A' + unit.X))@(unit.Y + 1)</td><td>@unit.Health / @unit.MaxHealth</td><td>@(unit.HasMoved ? "Yes" : "No")</td><td>@(unit.HasAttacked ? "Yes" : "No")</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <h2>Ordered action history</h2><p class="empty-state">A record of accepted actions, not a replay.</p>
+            <ol class="saved-events">
+            @foreach (var entry in selected.History)
+            {
+                <li data-sequence="@entry.Sequence"><span class="history-turn">#@entry.Sequence · T@entry.Turn</span><span>@entry.Text</span></li>
+            }
+            </ol>
+        </section>
+    }
+</div>

@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: tacticsim_ci
+          POSTGRES_USER: tacticsim
+          # Disposable CI service only; this is not an application credential.
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tacticsim -d tacticsim_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=tacticsim_ci;Username=tacticsim;Password=postgres
+      TACTICSIM_TEST_CONNECTION: Host=localhost;Port=5432;Database=tacticsim_ci;Username=tacticsim;Password=postgres
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore dependencies
+        run: dotnet restore TacticSim.sln
+      - name: Build Release
+        run: dotnet build TacticSim.sln --configuration Release --no-restore --warnaserror
+      - name: Run engine and PostgreSQL tests
+        run: dotnet test TacticSim.sln --configuration Release --no-build --no-restore --nologo
+      - name: Verify and apply migrations
+        run: |
+          dotnet tool restore --tool-manifest dotnet-tools.json
+          dotnet ef migrations has-pending-model-changes --project src/TacticSim.Web --configuration Release --no-build -- --environment Development
+          dotnet ef database update --project src/TacticSim.Web --configuration Release --no-build -- --environment Development
+      - name: Verify web publish
+        run: dotnet publish src/TacticSim.Web --configuration Release --no-build --no-restore --output artifacts/publish

@@ -25,6 +25,13 @@ Observed/fixed: the valueless `--migrate` argument could swallow a subsequent
 Production checks also corrected test assumptions about HttpOnly casing and
 localhost HSTS exclusion, then passed on rerun.
 
+The final implementation `4c2e3779c388387bcc3ec56971404628f89e10cf` also passed
+[GitHub Linux CI](https://github.com/eusha06/TACTICSIM/actions/runs/41300576818),
+including all 83 tests, migration/model checks, publish, Docker build, source
+revision check, published JavaScript/CSS, the exact Render migration command,
+TLS/full match/security checks and container replacement. Repeated local games
+ended on turns 14 and 16 depending on the deliberate concurrent move race.
+
 **No deployed URL or visual browser check is claimed for Release 0.** Chrome
 automation timed out after a focus-change error, including a get-app retry.
 Render service/database/URL and authenticated deployment access are missing; the

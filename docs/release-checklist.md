@@ -60,6 +60,7 @@ All results below are local/test evidence, not a Render deployment check.
   Development`: no model drift. Idempotent upgrade SQL reviewed: only new key
   table and EF migration-history insert.
 - [x] Release `dotnet publish` succeeded; Python scripts compile; `git diff --check` clean.
+  Published JavaScript/CSS links returned 200 through the TLS test edge.
 - [x] `docker build --build-arg SOURCE_REVISION=release0-local -t
   tacticsim:release0 .` succeeded using .NET 10 SDK/runtime images.
 - [x] `python3 -u scripts/verify_deployment.py tacticsim:release0`: Production
@@ -96,14 +97,16 @@ All results below are local/test evidence, not a Render deployment check.
 
 - [x] Commit and push verified source to existing `main` without history rewrite,
   using configured user identity and no assistant co-author attribution.
-  Initial implementation: `e0234fce14cbfc921139ba3fdceb11e9f5559eb9`; author and
-  committer both map to `eusha06`. Follow-up command/verification documentation
-  uses the same identity; the final release report records its full SHA.
+  Implementation: `4c2e3779c388387bcc3ec56971404628f89e10cf` (following initial
+  `e0234fce14cbfc921139ba3fdceb11e9f5559eb9`). Author and committer use `eusha06`,
+  without co-author attribution. A later documentation-only release-record commit
+  does not change that tested implementation; the final report identifies HEAD.
 - [x] Observe GitHub CI, including the Linux production Docker/TLS/replacement check:
   [successful implementation run](https://github.com/eusha06/TACTICSIM/actions/runs/41300183058)
-  for `e0234fc`. Final CMD/TCP-readiness follow-up is locally verified and must
-  also pass CI before its source is reported verified; consult the final release
-  report and GitHub run for that exact SHA. CI is not a deployment.
+  for `e0234fc`; the final CMD/TCP-readiness/published-asset follow-up also passed:
+  [successful final implementation run](https://github.com/eusha06/TACTICSIM/actions/runs/41300576818)
+  for full implementation SHA `4c2e3779c388387bcc3ec56971404628f89e10cf`.
+  Both Linux runs completed successfully. CI is not a deployment.
 - [ ] Deploy exact successful source through the intended Render service.
 - [ ] Record actual service/deployment ID, full deployed commit and real URL;
   compare `/health` revision with Render's deployment commit.

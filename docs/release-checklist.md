@@ -28,6 +28,9 @@
 - [x] Update AGENTS for the authorized Operation Rivergate direction and Release 0.
 - [x] Multi-stage .NET 10 Docker publish, non-root runtime, no SQLite/database/key
   files in the runtime image, bounded build context with local secrets excluded.
+  Exec-form `CMD` supports Render's full migration command override; the container
+  check runs that exact command twice. PostgreSQL readiness uses TCP to avoid
+  accepting its temporary initialization-only Unix socket.
 - [x] Match actual `ConnectionStrings__DefaultConnection` PostgreSQL configuration.
 - [x] Honor `PORT` on `0.0.0.0`; preserve explicit URL overrides. Opt-in managed
   proxy HTTPS scheme handling before cookies/redirects, without forwarded host/IP.
@@ -91,9 +94,16 @@ All results below are local/test evidence, not a Render deployment check.
 
 ## Publishing and live acceptance
 
-- [ ] Commit and push verified source to existing `main` without history rewrite,
+- [x] Commit and push verified source to existing `main` without history rewrite,
   using configured user identity and no assistant co-author attribution.
-- [ ] Observe GitHub CI, including the Linux production Docker/TLS/replacement check.
+  Initial implementation: `e0234fce14cbfc921139ba3fdceb11e9f5559eb9`; author and
+  committer both map to `eusha06`. Follow-up command/verification documentation
+  uses the same identity; the final release report records its full SHA.
+- [x] Observe GitHub CI, including the Linux production Docker/TLS/replacement check:
+  [successful implementation run](https://github.com/eusha06/TACTICSIM/actions/runs/41300183058)
+  for `e0234fc`. Final CMD/TCP-readiness follow-up is locally verified and must
+  also pass CI before its source is reported verified; consult the final release
+  report and GitHub run for that exact SHA. CI is not a deployment.
 - [ ] Deploy exact successful source through the intended Render service.
 - [ ] Record actual service/deployment ID, full deployed commit and real URL;
   compare `/health` revision with Render's deployment commit.

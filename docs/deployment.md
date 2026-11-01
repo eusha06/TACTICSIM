@@ -60,6 +60,9 @@ The multi-stage Dockerfile restores/publishes only Core/Web with the .NET 10 SDK
 then runs the ASP.NET 10 runtime as its non-root `app` user. Its fixed working
 directory is `/app`. No PostgreSQL files, dumps, key files, SDK, or test tooling
 are copied into the runtime image. `.dockerignore` limits the source context.
+The exec-form `CMD` starts `dotnet TacticSim.Web.dll`; the migration hook replaces
+it with the full `dotnet TacticSim.Web.dll --migrate` command. The Docker check
+executes that same command twice, rather than relying on entrypoint arguments.
 
 `PORT` binds HTTP on `0.0.0.0` (default image port 8080 if absent); explicit
 `--urls`/`ASPNETCORE_URLS` overrides it. Render supplies 10000. TLS terminates at

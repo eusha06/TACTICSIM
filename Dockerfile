@@ -16,4 +16,5 @@ ENV ASPNETCORE_ENVIRONMENT=Production \
 EXPOSE 8080
 COPY --from=build /publish/ ./
 USER $APP_UID
-ENTRYPOINT ["dotnet", "TacticSim.Web.dll"]
+# Render can replace CMD with the full pre-deploy command from render.yaml.
+CMD ["dotnet", "TacticSim.Web.dll"]

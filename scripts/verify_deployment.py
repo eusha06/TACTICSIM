@@ -6,10 +6,12 @@ Only containers/network named by this run are removed; no existing DB is used.
 """
 import http.client
 import http.server
+import html
 import json
 import os
 from pathlib import Path
 import secrets
+import re
 import ssl
 import subprocess
 import sys
@@ -106,13 +108,13 @@ def main():
         docker("network", "create", prefix)
         docker("run", "-d", "--name", database, "--network", prefix,
             "-e", "POSTGRES_DB=tacticsim_verify", "-e", "POSTGRES_PASSWORD", "postgres:17", env=environment)
-        wait_for(lambda: docker("exec", database, "pg_isready", "-U", "postgres", "-d", "tacticsim_verify",
+        wait_for(lambda: docker("exec", database, "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", "tacticsim_verify",
             stderr=subprocess.DEVNULL).endswith("accepting connections"), "isolated PostgreSQL")
         docker("run", "--rm", "--network", prefix, "-e", "ConnectionStrings__DefaultConnection", image,
-            "--migrate", env=environment)
+            "dotnet", "TacticSim.Web.dll", "--migrate", env=environment)
         # Reapplying must be safe and leave the existing migration/import backups alone.
         docker("run", "--rm", "--network", prefix, "-e", "ConnectionStrings__DefaultConnection", image,
-            "--migrate", env=environment)
+            "dotnet", "TacticSim.Web.dll", "--migrate", env=environment)
         start_application()
         connection = http.client.HTTPConnection("127.0.0.1", backend[0])
         connection.request("GET", "/")
@@ -136,8 +138,13 @@ def main():
             owner_cookie = next(cookie for cookie in browser.cookies if cookie.name == "TacticSim.Browser")
             assert owner_cookie.secure
             assert any(name.lower() == "httponly" for name in owner_cookie._rest)
-            status, _, headers = browser.request("/")
+            status, page, headers = browser.request("/")
             assert status == 200
+            assets = [html.unescape(path) for path in re.findall(r'(?:src|href)="([^\"]+\.(?:css|js)(?:\?[^\"]*)?)"', page)
+                if path.startswith("/")]
+            assert any("/js/site." in path for path in assets), "Board JavaScript is missing from the page."
+            for path in assets:
+                assert browser.request(path)[0] == 200, "Published asset is unavailable: " + path
             # ASP.NET intentionally excludes localhost from HSTS; use a public-host
             # request through the simulated trusted edge to check production HSTS.
             connection = http.client.HTTPConnection("127.0.0.1", backend[0])

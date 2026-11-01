@@ -1,0 +1,25 @@
+# Account-side setup and backup gates: docs/deployment.md.
+# Connect the intended existing PostgreSQL database; this creates no database.
+services:
+  - type: web
+    name: tacticsim
+    runtime: docker
+    plan: starter
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # Deploy manually after CI and backup review, never on an unchecked push.
+    autoDeployTrigger: "off"
+    preDeployCommand: dotnet TacticSim.Web.dll --migrate
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: PORT
+        value: "10000"
+      - key: ReverseProxy__Enabled
+        value: "true"
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: AllowedHosts
+        sync: false

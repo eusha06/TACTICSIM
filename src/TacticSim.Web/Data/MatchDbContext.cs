@@ -1,10 +1,12 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using TacticSim.Core;
 
 namespace TacticSim.Web.Data;
 
-public sealed class MatchDbContext(DbContextOptions<MatchDbContext> options) : DbContext(options)
+public sealed class MatchDbContext(DbContextOptions<MatchDbContext> options) : DbContext(options), IDataProtectionKeyContext
 {
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
     public DbSet<BrowserSession> Sessions => Set<BrowserSession>();
     public DbSet<SavedMatch> Matches => Set<SavedMatch>();
     public DbSet<SavedUnit> Units => Set<SavedUnit>();

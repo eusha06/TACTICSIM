@@ -22,6 +22,10 @@ pgdata/
 .pgpass
 appsettings.Local.json
 *.secrets.json
+*.pem
+*.key
+*.p12
+*.pfx
 
 # Optional Python HTTP verification script
 __pycache__/

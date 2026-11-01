@@ -1,0 +1,22 @@
+# Allow only inputs required for the web publish. No Git, local settings, data,
+# dumps, keys, tests, or credentials enter the build context.
+**
+!global.json
+!src/
+!src/TacticSim.Core/
+!src/TacticSim.Core/**
+!src/TacticSim.Web/
+!src/TacticSim.Web/**
+**/bin/
+**/obj/
+**/.env*
+**/appsettings.*.json
+!src/TacticSim.Web/appsettings.json
+**/*.secrets.json
+**/*.db*
+**/*.dump
+**/*.backup
+**/*.pfx
+**/*.pem
+**/keys/
+**/Properties/

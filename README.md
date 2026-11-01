@@ -4,6 +4,12 @@ A small fictional turn-based tactical simulation for a C#/.NET portfolio.
 
 **Current status: playable local MVP.** The Razor Pages board connects to the C# engine using plain JavaScript fetch calls. It includes terrain, unit intel, legal-action highlights, human/computer turns, victory/defeat, New Match, action history, automatic save/resume, and recent completed results. PostgreSQL stores matches, units, ordered events, and accepted commands in relational tables. The Match history page retains earlier matches and can resume an unfinished one. A complete match and refresh/New Match were verified through Chrome controls, along with a 375px mobile layout; see the [verification record and manual checks](docs/verification.md).
 
+**Release 0:** a multi-stage .NET 10 Docker image and Render Blueprint are prepared.
+Production keys persist in PostgreSQL, with a health endpoint and explicit
+migration hook. No live hosting URL has been verified. Follow the
+[deployment/account setup guide](docs/deployment.md) and
+[current release checklist](docs/release-checklist.md).
+
 ## Prerequisites
 
 - .NET 10 SDK. `global.json` accepts stable .NET 10 feature bands, including the installed 10.0.402 SDK.
@@ -28,7 +34,7 @@ Open `http://localhost:5178` to play and `/History` for your browser’s match h
 
 In Development, macOS/Linux defaults to PostgreSQL on `/tmp`, database `tacticsim`, using your OS username (a matching PostgreSQL role must exist). For another setup, configure `ConnectionStrings:DefaultConnection` using user secrets or `ConnectionStrings__DefaultConnection` in the environment. Production requires an explicit connection string and HTTPS. Never commit credentials.
 
-The initial `InitialRelational` migration creates `GameSessions`, `GameMatches`, `MatchUnits`, `MatchEvents`, and `MatchCommands`. There are no `EnsureCreated` calls. An alternative explicit migration command is:
+The initial `InitialRelational` migration creates `GameSessions`, `GameMatches`, `MatchUnits`, `MatchEvents`, and `MatchCommands`. Release 0 adds `DataProtectionKeys` for production cookie continuity. There are no `EnsureCreated` calls. An alternative explicit migration command is:
 
 ```sh
 dotnet run --project src/TacticSim.Web --launch-profile http -- --migrate
@@ -68,7 +74,19 @@ To verify an actual application restart (the script owns its own server on port 
 python3 scripts/verify_restart.py
 ```
 
-The script creates a match with damaged health and used actions, terminates the server, starts a new process, and compares restored state/history. It also retries an old attack command to check that its persisted receipt prevents duplicate damage. Cookies stay in memory, and only the script's own processes are stopped.
+Build Release first: this script starts the Release DLL in Development. It creates a match with damaged health and used actions, terminates the server, starts a new process, and compares restored state/history. It also retries an old attack command to check that its persisted receipt prevents duplicate damage. Cookies stay in memory, and only the script's own processes are stopped.
+
+For the production image (requires Docker and OpenSSL):
+
+```sh
+docker build -t tacticsim:release0 .
+python3 scripts/verify_deployment.py tacticsim:release0
+```
+
+This uses an isolated PostgreSQL container, a temporary trusted TLS proxy, and
+container replacement to check production cookie/session continuity. It never
+connects to the application's existing database. See [deployment.md](docs/deployment.md)
+for the backup/migration procedure and hosted verification steps.
 
 The PostgreSQL xUnit tests use temporary schemas inside the local `tacticsim` database, then remove those schemas. To use another test database, set `TACTICSIM_TEST_CONNECTION` to its connection string; the role needs schema creation permission. They never use EF's in-memory provider or modify the app's public tables. For only the 70 Core tests:
 
@@ -78,7 +96,11 @@ dotnet test tests/TacticSim.Tests --no-restore
 
 ## Continuous integration
 
-GitHub Actions builds the solution in Release mode with warnings treated as errors, runs all 79 tests against a disposable PostgreSQL 17 service, verifies/applies migrations, and checks that the web app publishes successfully. The workflow runs on pushes to `main` and pull requests. CI database credentials are for that disposable service only; local and deployment secrets stay outside Git.
+GitHub Actions builds Release with warnings as errors, runs 83 tests (70 engine,
+13 PostgreSQL), verifies/applies migrations, publishes the web app, builds its
+production Docker image, and runs TLS/proxy/container replacement checks. The
+workflow runs on pushes to `main` and pull requests. CI database credentials are
+for disposable services only; local and deployment secrets stay outside Git.
 
 ## Engine API
 

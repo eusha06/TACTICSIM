@@ -66,3 +66,24 @@ Action history remains a readable log, not event-sourced state or a replay. Conn
 The responsive 8x8 board uses plain CSS/JavaScript. It renders server-provided legal move costs and target IDs. Selection is local presentation state; even clicks on non-highlighted cells are validated by the server and produce readable errors. Controls are disabled while a request is pending. On conflicts the server supplies current state; network retries reuse the pending command. Unit labels, HP, selection details, terrain legend, turn indicator, history, and completion banners are rendered without external assets or client combat rules. Keyboard arrows navigate cells and Escape clears selection.
 
 No frontend framework, Node build pipeline, login, multiplayer, fog of war, external AI API, or replay system is part of the MVP.
+
+## Release 0 hosting boundary
+
+The multi-stage .NET 10 image runs Web as a non-root user at stable content root
+`/app/`, honors the host's `PORT`, and requires
+`ConnectionStrings__DefaultConnection`. Production Data Protection persists its
+key ring in PostgreSQL's additive `DataProtectionKeys` table; Development retains
+the original local ring. Owner cookie name/purpose and gameplay state are
+unchanged. A one-time `--import-keys` operator command can add an older filesystem
+ring without deleting keys; the old application discriminator must also remain
+the same. Keys and game tables must be backed up together.
+
+`ReverseProxy__Enabled` explicitly trusts a managed ingress's forwarded HTTPS
+scheme before redirection/cookie creation. No forwarded host or client identity
+is accepted. `/health` reads required tables and exposes only readiness/revision,
+including 503 during database failure; it creates no owners, keys, or matches.
+Normal startup never applies migrations. The prepared Render pre-deploy command
+applies reviewed migrations after backup gates. No production database files are
+stored in the web container. See [deployment.md](deployment.md) for the host's
+trust assumptions, account steps, migration/rollback procedure, and evidence
+limits. The Blueprint is deployment preparation, not evidence of a hosted app.

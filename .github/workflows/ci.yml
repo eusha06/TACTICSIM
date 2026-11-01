@@ -16,7 +16,7 @@ concurrency:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:17
@@ -57,3 +57,7 @@ jobs:
           dotnet ef database update --project src/TacticSim.Web --configuration Release --no-build -- --environment Development
       - name: Verify web publish
         run: dotnet publish src/TacticSim.Web --configuration Release --no-build --no-restore --output artifacts/publish
+      - name: Build production container
+        run: docker build --build-arg SOURCE_REVISION=${{ github.sha }} --tag tacticsim:ci .
+      - name: Verify production container, TLS proxy and replacement
+        run: python3 scripts/verify_deployment.py tacticsim:ci ${{ github.sha }}

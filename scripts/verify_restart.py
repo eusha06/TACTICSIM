@@ -1,5 +1,6 @@
-"""Start, stop and restart Web on an isolated port; keep test cookies only in memory.
-Build and apply migrations first. Uses the same DB configuration as the app.
+"""Start, stop and restart Development Web; keep test cookies only in memory.
+Build Release and apply migrations first. Uses the same DB configuration as the app.
+For a production container/key-ring replacement check use verify_deployment.py.
 """
 import os
 from pathlib import Path
@@ -15,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 BASE = "http://127.0.0.1:5181"
 web.BASE = BASE
 WEB_ROOT = ROOT / "src" / "TacticSim.Web"
-DLL = WEB_ROOT / "bin" / "Debug" / "net10.0" / "TacticSim.Web.dll"
+DLL = WEB_ROOT / "bin" / "Release" / "net10.0" / "TacticSim.Web.dll"
 
 
 def start(log):

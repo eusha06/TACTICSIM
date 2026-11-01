@@ -14,6 +14,7 @@ import urllib.parse
 import uuid
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:5178"
+SSL_CONTEXT = None  # Optional trusted local test certificate; normal HTTPS validation by default.
 
 
 def command_payload(state, kind, **fields):
@@ -28,7 +29,8 @@ class Browser:
         if source:
             for cookie in source.cookies:
                 self.cookies.set_cookie(copy.copy(cookie))
-        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cookies))
+        self.opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(self.cookies),
+            urllib.request.HTTPSHandler(context=SSL_CONTEXT))
         if source:
             self.token = source.token
         else:

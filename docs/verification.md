@@ -1,5 +1,38 @@
 # Verification record
 
+## Release 0 — 2026-11-01
+
+Release build/publish passed with zero warnings/errors. All **83 tests** passed
+(70 Core, 13 PostgreSQL); EF reported no model drift. The new tests cover database
+key persistence between independent providers, compatibility/import of an old
+filesystem cookie key ring, and healthy/missing-schema readiness without writes.
+
+The actual Production Docker image passed `scripts/verify_deployment.py` through
+a temporary trusted local TLS proxy: PORT binding/non-root user, HTTPS redirect,
+Secure/HttpOnly cookies/HSTS, a complete match (turn 14, seven human attacks),
+CSRF, two-owner isolation, duplicate/stale/concurrent commands, refresh/history/
+resume, and completed results. Replacing the web container preserved the exact
+owner cookie, damaged match/action flags/history and an old attack receipt.
+PostgreSQL outage produced 503 readiness; recovery restored the exact saved state.
+
+After a private local database backup, the additive key-table migration applied
+successfully. Before/after counts and content checksums matched for all five
+canonical and three legacy backup tables. A separate disposable restore also
+matched those checksums. No production database was identified or modified.
+
+Observed/fixed: the valueless `--migrate` argument could swallow a subsequent
+`--environment`; startup now strips operator switches before host parsing.
+Production checks also corrected test assumptions about HttpOnly casing and
+localhost HSTS exclusion, then passed on rerun.
+
+**No deployed URL or visual browser check is claimed for Release 0.** Chrome
+automation timed out after a focus-change error, including a get-app retry.
+Render service/database/URL and authenticated deployment access are missing; the
+Render integration was found available but not installed/connected. Follow
+[deployment.md](deployment.md) for precise account steps and
+[release-checklist.md](release-checklist.md) for pending live checks. Historical
+browser results below describe the earlier MVP only.
+
 ## Automated checks
 
 - Solution build: zero warnings and errors.

@@ -1,43 +1,67 @@
-# TacticSim contributor instructions
+# TACTICSIM: OPERATION RIVERGATE — contributor instructions
 
-## Scope and stack
+## Authorized direction and release gate
 
-- Build a small fictional tactical simulation for a beginner who knows C++ and data structures. Keep the MVP achievable in about five hours.
-- Use .NET 10/C#, ASP.NET Core Razor Pages, plain JavaScript/CSS, EF Core 10 with PostgreSQL, and xUnit.
-- No separate frontend framework, Node build pipeline, multiplayer, login, fog of war, external AI APIs, or random combat.
-- The user has authorized the engine and playable Razor Pages UI. PostgreSQL persistence and HTTP security are included as necessary foundations for exposing match commands. Keep further work within this small MVP.
+- Evolve the existing game into an approachable tactical mission game with an illustrated miniature battlefield and clear instructions, while retaining reliable .NET/PostgreSQL foundations.
+- Implement only the bounded release explicitly requested by the user. This direction is not authorization to implement a mission system, new rules, new artwork, or a frontend redesign immediately.
+- Read `README.md`, `docs/architecture.md`, `docs/verification.md`, and `docs/release-checklist.md`, then inspect the relevant implementation before editing.
+- Preserve working features and existing saved matches. Do not start the next release automatically.
+- Prefer small types, explicit names, ordinary collections, and straightforward control flow understandable to a beginner who knows C++ and data structures. Avoid unnecessary abstractions, generic repositories, and CQRS frameworks.
 
-## Project boundaries
+## Stack and project boundaries
 
-- `src/TacticSim.Core`: domain models and every game rule. No EF, ASP.NET, database, browser, or HTTP dependency.
-- `src/TacticSim.Web`: Razor Pages, server endpoints, anonymous session ownership, and EF/PostgreSQL persistence. Reference Core; do not duplicate its rules.
-- `tests/TacticSim.Tests`: xUnit engine tests referencing Core. Add meaningful rule and boundary cases when the engine is implemented.
-- `tests/TacticSim.Persistence.Tests`: real PostgreSQL integration tests referencing Web; each run creates and drops only uniquely named test schemas.
-- Prefer small types, explicit names, ordinary collections, and straightforward control flow. Avoid generic repositories, CQRS frameworks, and unnecessary abstractions.
+- Use .NET 10/C#, ASP.NET Core Razor Pages, plain JavaScript/CSS, EF Core 10 with PostgreSQL, and xUnit. No frontend rewrite, separate frontend framework, JavaScript game engine, or Node build pipeline.
+- `src/TacticSim.Core`: domain models and all gameplay rules; no EF, ASP.NET, HTTP, database, or browser dependencies.
+- `src/TacticSim.Web`: Razor Pages, server handlers, anonymous ownership, and relational EF/PostgreSQL persistence; reference Core without duplicating its rules.
+- `tests/TacticSim.Tests`: meaningful engine and boundary tests referencing Core.
+- `tests/TacticSim.Persistence.Tests`: real PostgreSQL integration tests referencing Web. Use a dedicated test database and uniquely named test schemas, never production data.
+- No multiplayer, login, fog of war, external AI APIs, or random combat unless a later release explicitly authorizes a scope change.
 
-## Required MVP behavior
+## Gameplay, compatibility, and security requirements
 
-- One fixed 8x8 map with plain, forest, hill, and impassable water.
-- Infantry, Armor, and Artillery; three units per side.
-- Human versus a simple deterministic computer opponent.
-- Select, move, attack, and end turn; terrain-aware movement, attack range, health, and victory detection.
-- Save/resume matches, action history, and completed-match results. Call the log **action history**, never a replay feature.
-- All rules and legal moves/damage must be computed and validated on the server. Browser selection and highlights are presentation only.
-- Bind each match to a separate anonymous browser session. Derive ownership from the server-recognized session, never a client-supplied owner ID; check ownership on reads and writes.
-- Protect every state-changing request against CSRF using ASP.NET Core antiforgery validation. Never mutate state on GET.
-- Reject stale commands and prevent duplicate commands from applying twice. Persist command IDs and expected state versions with an atomic database update; in-memory checks alone are insufficient.
-- Keep secrets out of source control. Do not claim persistence or HTTP security is implemented before its code and checks exist.
-- Persist match state, units, accepted commands, and ordered events in relational tables. JSON command-response caches are for retry responses only, never the source used to restore games.
-- Use EF migrations only. Never reintroduce `EnsureCreated` alongside migrations. Preserve the legacy snapshot tables as backups; do not drop/reseed existing matches.
+- Keep every gameplay rule authoritative in C#. The browser sends intent and renders server-provided state, legal moves, and attack targets; it never decides legality or damage.
+- Preserve the current playable baseline until a release explicitly changes it: fixed 8x8 map, plain/forest/hill/impassable water, Infantry/Armor/Artillery, three units per side, deterministic computer turns, select/move/attack/end turn, health, and victory detection.
+- Preserve save/resume, ordered action history, completed results, and session-owned match history. Action history is not a replay feature; label it accurately.
+- Preserve existing save semantics, unit action flags, IDs, map keys, and compatible rules. The current `crossing-v1` key resolves to the existing fixed map; do not silently repoint old saves to a different map or mission. Any authorized schema/rule evolution must include a compatibility plan and tests.
+- Bind all match reads, reviews, history, resumes, and mutations to the server-recognized anonymous browser owner. Do not trust client-supplied owner/side IDs or treat a guessed match ID as authorization.
+- Preserve Razor Pages antiforgery validation for every state-changing request. GET handlers must not mutate gameplay or active-match selection.
+- Preserve command idempotency, payload fingerprint checks, stale-command rejection, and match/session concurrency tokens. Identical retries return their saved outcome without applying an action again, including under concurrent requests.
+- Save each accepted command, match/unit/turn/action state, and its ordered events atomically in PostgreSQL. Keep state in relational tables; JSON response caches are only for HTTP retries, not the canonical saved game.
+- Use EF migrations only; never combine migrations with `EnsureCreated`. Preserve legacy snapshot tables as backups. Never delete production data, drop/reseed production matches, or point destructive test setup at production.
+- Preserve cookie identity and ASP.NET Data Protection compatibility across releases. Production must retain its key ring as well as PostgreSQL data; do not replace keys, change cookie purpose, or reset identity as a routine deployment step.
+- Keep credentials, databases, dumps, local key rings, and machine-specific configuration out of Git. Never print secret values in checks or release reports.
 
-## Short implementation checklist
+## Artwork and experience
 
-- [x] Phase 1: inspect the starter; document scope, project boundaries, security design, and local commands.
-- [x] Phase 1: verify the starter build and the final solution build/test discovery (zero test cases in this phase).
-- [x] Phase 2: implement Core rules and deterministic computer turns with meaningful xUnit tests; exact rules are in `docs/rules.md`.
-- [x] Phase 3: add PostgreSQL persistence, anonymous ownership, antiforgery, and atomic version/idempotency checks; verify those boundaries using `scripts/verify_web.py`.
-- [x] Phase 4: implement the Razor board, plain JS/CSS controls, save/resume, action history, and results; complete a match through live HTTP endpoints.
-- [x] Basic Chrome visual/interaction QA: complete match on turn 12, errors, refresh/New Match, and 375px mobile emulation; follow `docs/verification.md` for repeatable and extended checks.
-- [x] Relational persistence: generated/applied initial migration, preserved old snapshots as relational rows, added session-owned history/review/resume, and verified an actual process restart with `scripts/verify_restart.py`.
+- Use original, consistent SVG artwork for precise game assets. Keep assets editable as SVG/code with a coherent perspective, palette, proportions, and stroke treatment. Do not substitute generated bitmap assets, external stock artwork, or a new rendering framework for these assets.
+- Make the battlefield read as an illustrated miniature scene while retaining legible terrain, unit labels, health, selection, and actionable server-provided highlights at desktop/mobile sizes.
+- Give clear instructions for the gameplay actually available in the requested release. Artwork and labels must not imply mechanics that are not implemented.
+- Do not add decorative controls, fake buttons, placeholder mission interactions, or unsupported gameplay claims. Keep implementation details out of player flows unless needed for a meaningful player decision.
 
-Run commands from the directory containing `TacticSim.sln`. Read `README.md` and `docs/architecture.md` before extending the scaffold. Complete only the phase the user authorizes.
+## Required process for each requested release
+
+1. Record the release prompt, bounded scope, starting commit, intended branch, hosting target, and acceptance checks in `docs/release-checklist.md`. Inspect current code and hosting configuration rather than assuming previous summaries are current.
+2. Implement only that release, preserving saved matches and the requirements above. Continue independent work when an external prerequisite is missing.
+3. Run relevant automated checks and fix failures. Preserve engine, persistence, ownership, antiforgery, idempotency, concurrency, migration, and restart coverage as applicable. Record the actual commands, configuration/artifact, and results.
+4. Inspect the UI in a browser when access is available, including relevant interactions and responsive states. If access fails, record the exact tool failure and provide precise manual checks; do not claim browser verification.
+5. Commit with a clear message and push to the existing intended branch (`main` at the current baseline unless the user changes it). Preserve Git history: no force pushes, rebases, or amendments of existing commits. Use the user's configured author/committer identity and do not add assistant co-author/contributor attribution.
+6. Deploy through the established hosting configuration. If the provider, service, credentials, production database/key storage, or target URL is not identified, record the exact blocker and required manual steps. Do not invent a provider, URL, or successful deployment.
+7. Verify the deployed URL and the actual deployed commit/artifact, not just a successful CI job or localhost. Check the release's playable flow, persistence/session behavior, and affected UI on the deployed version.
+8. Fix observed defects within the release, rerun relevant checks, commit/push, redeploy, and reverify. Do not report completion while an observed release defect remains unresolved; distinguish completed local work from blocked deployment/verification.
+9. Update `docs/release-checklist.md` and finish with the commit SHA, deployed URL (or explicit blocked/not deployed status), what changed, checks actually performed, remaining issues/blockers, and a short manual play checklist. Stop before the next release.
+
+A test, deployment, or browser check is only marked passed after observing its result. Historical results in `docs/verification.md` are evidence for that earlier revision, not a substitute for checking a new release. The Development restart script now targets Release binaries. `scripts/verify_deployment.py` separately checks a Production container through a local TLS edge and replaces that container; neither is proof of a deployed Render service.
+
+## Release 0 deployment direction
+
+As inspected on 2026-11-01: repository `eusha06/TACTICSIM`, branch `main`, baseline commit `797d3a429bf6453454d562867b1075252ddaedf8`.
+
+- Release 0 is authorized: reliable deployment only, with no UI redesign, artwork, or rule changes. Stop after this release.
+- No established host was found. `Dockerfile`, `.dockerignore`, and `render.yaml` prepare the user's authorized Render fallback. Follow `docs/deployment.md`; account setup and live verification remain required before claiming deployment.
+- CI builds/tests/migrates/publishes and verifies the production Docker image/TLS proxy/container replacement. A green workflow is not a deployment.
+- Production must use `ConnectionStrings__DefaultConnection` and PostgreSQL `DataProtectionKeys` storage; never put production databases/keys in the container filesystem. Apply the additive key-table migration explicitly before serving.
+- Keep the stable `/app/` container content root and existing owner cookie/purpose. For an existing host's ring, import keys without deleting originals and preserve its exact discriminator using `DataProtection__ApplicationName` before switching traffic.
+- Only enable `ReverseProxy__Enabled` behind the managed trusted ingress; it accepts one forwarded scheme, never forwarded host/client identity. Keep `/health` read-only and free of credentials/state details.
+- Take/verify a private backup before migrations, preserve legacy backup tables, and never roll back by dropping the key table. Redeploying an older application image must retain compatible key storage/discriminator.
+- GitHub inspection returned no deployment records, repository environments, repository secret names, or homepage URL. This does not rule out hosting configured elsewhere; none has been identified for this repository.
+- Keep actual results, exact deployment/browser blockers, and unverified checks in `docs/release-checklist.md`. Do not start the following release.

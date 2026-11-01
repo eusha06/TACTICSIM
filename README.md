@@ -2,14 +2,15 @@
 
 A small fictional turn-based tactical simulation for a C#/.NET portfolio.
 
-**Current status: playable local MVP.** The Razor Pages board connects to the C# engine using plain JavaScript fetch calls. It includes terrain, unit intel, legal-action highlights, human/computer turns, victory/defeat, New Match, action history, automatic save/resume, and recent completed results. PostgreSQL stores matches, units, ordered events, and accepted commands in relational tables. The Match history page retains earlier matches and can resume an unfinished one. A complete match and refresh/New Match were verified through Chrome controls, along with a 375px mobile layout; see the [verification record and manual checks](docs/verification.md).
+**Current status: playable MVP at [tacticsim.onrender.com](https://tacticsim.onrender.com/).** The Razor Pages board connects to the C# engine using plain JavaScript fetch calls. It includes terrain, unit intel, legal-action highlights, human/computer turns, victory/defeat, New Match, action history, automatic save/resume, and recent completed results. PostgreSQL stores matches, units, ordered events, and accepted commands in relational tables. The Match history page retains earlier matches and can resume an unfinished one. A complete match and refresh/New Match were verified through Chrome controls, along with a 375px mobile layout; see the [verification record and manual checks](docs/verification.md).
 
-**Release 0:** a multi-stage .NET 10 Docker image and Render Blueprint are prepared.
-Production keys persist in PostgreSQL, with a health endpoint and explicit
-migration start command for free Render compute. No live hosting URL has been
-verified. Follow the
-[deployment/account setup guide](docs/deployment.md) and
-[current release checklist](docs/release-checklist.md).
+**Release 0 verified live on 2026-11-01:** deployed commit
+`a66c3e8b8e2bbc556aeb10cf89c870e064aea9c4`, free Render Docker hosting and
+free Prisma PostgreSQL. Health, a complete match, ownership/security checks,
+refresh/history/resume, and saved-match continuity across a Render restart passed.
+Production cookie keys persist in PostgreSQL. Free Render compute can take about
+one minute to wake after inactivity. See the [verification record](docs/verification.md),
+[deployment guide](docs/deployment.md), and [release checklist](docs/release-checklist.md).
 
 ## Prerequisites
 

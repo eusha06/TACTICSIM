@@ -7,8 +7,9 @@
 - Starting commit: `797d3a429bf6453454d562867b1075252ddaedf8`.
 - Repository/branch: https://github.com/eusha06/TACTICSIM — `main`.
 - No UI, artwork, map, or game-rule changes; do not start Release 1.
-- **Assigned URL: https://tacticsim.onrender.com — not yet verified healthy.**
-  The initial deploy failed before application startup; repair/acceptance is in progress.
+- **Verified live URL: https://tacticsim.onrender.com. Release 0 complete.**
+  Runtime commit `a66c3e8b8e2bbc556aeb10cf89c870e064aea9c4`; health and
+  live acceptance passed on 2026-11-01. No following release started.
 - No established host/config was found; GitHub returned no deployments,
   environments, repository secret names, or homepage URL. This does not rule out
   an unidentified host elsewhere.
@@ -26,20 +27,19 @@
 - The existing unrelated service was directly observed on Render's **Free**
   compute plan. It remains unchanged. `render.yaml` now also selects `plan: free`.
 - Current target: the user authorized Prisma Postgres and the other Render
-  account, with free resources only. That account was observed in Chrome on its
-  first-service creation screen; no service has yet been created there.
+  account, with free resources only. The dedicated service is now live in that account.
 - The user completed Prisma sign-in. Free workspace quotas were observed: 200K
   operations/month, 2 GB storage, $0 invoice. Dedicated project/database `tacticsim`
   was created in Singapore; pooled/direct credentials were privately configured
   in the new free Render service. No secret values were committed or printed.
 - Render service `srv-dbjis38ae00c73ec5vl0`, assigned `https://tacticsim.onrender.com`,
-  Free Docker/512 MB, Singapore, source `83406f02bd35345623e094e86da906a1414fff0a`.
-  Initial deploy `dep-dbjis40ae00c73ec61pg` built, then exited 127 before C# startup.
-  Its saved quoted Docker Command was observed; replace it with the default
-  image startup script. Existing local data/backups remain unchanged.
+  Free Docker/512 MB, Singapore. Initial deploy of `83406f0` failed before C#
+  startup; clearing the host override and using the versioned image startup
+  script fixed it. Live deployment `dep-dbjji7m7bikc73flln40` uses
+  `a66c3e8b8e2bbc556aeb10cf89c870e064aea9c4`. Existing local data/backups remain unchanged.
 - Chrome automation initially reported focus-change errors/timeouts; subsequent
-  recovery allowed the local browser checks below. Live browser acceptance
-  remains unperformed because no TacticSim deployment exists.
+  recovery allowed local and subsequently deployed browser checks. See
+  [live acceptance evidence](verification.md) for the exact checks and restart state.
 
 ## Implementation
 
@@ -48,8 +48,8 @@
 - [x] Update AGENTS for the authorized Operation Rivergate direction and Release 0.
 - [x] Multi-stage .NET 10 Docker publish, non-root runtime, no SQLite/database/key
   files in the runtime image, bounded build context with local secrets excluded.
-  Exec-form `CMD` supports Render's full migration command override; the container
-  check runs that exact command twice. PostgreSQL readiness uses TCP to avoid
+  Exec-form `CMD` invokes the versioned migrate-then-start script; keep the
+  provider Docker Command empty. The container check runs that default twice. PostgreSQL readiness uses TCP to avoid
   accepting its temporary initialization-only Unix socket.
 - [x] Match actual `ConnectionStrings__DefaultConnection` PostgreSQL configuration.
 - [x] Honor `PORT` on `0.0.0.0`; preserve explicit URL overrides. Opt-in managed
@@ -156,9 +156,9 @@ All results below are local/test evidence, not a Render deployment check.
   safely reapplied migrations, completed a match (turn 14, seven human attacks),
   verified TLS/cookies/CSRF/two-owner isolation/history/resume, replaced the
   container retaining state/keys, and checked database outage/recovery.
-- [ ] Identify the existing free PostgreSQL target, or receive explicit
-  acceptance of Render's temporary free database and record its expiry.
-- [ ] Deploy the free service and verify the real assigned URL/commit, play flow,
+- [x] Dedicated free Prisma PostgreSQL target identified and configured; no
+  expiring Render PostgreSQL database was created.
+- [x] Deploy the free service and verify the real assigned URL/commit, play flow,
   two-browser ownership isolation, and resume after redeployment.
 
 ### Prisma connection preparation
@@ -179,7 +179,7 @@ All results below are local/test evidence, not a Render deployment check.
   TLS, private secret configuration and unchanged fallback behavior.
 - [x] User completes Prisma sign-in; identify/create a dedicated Free TacticSim
   database and app credential, preserving unrelated databases/credentials.
-- [ ] Configure both private Npgsql strings in free Render, deploy verified source,
+- [x] Configure both private Npgsql strings in free Render, deploy verified source,
   and perform the live acceptance checks above. No cloud result is inferred from
   local PostgreSQL tests.
 
@@ -193,7 +193,9 @@ All results below are local/test evidence, not a Render deployment check.
 - [x] Rebuilt/retested the default image command under 512 MB: bootstrap,
   migration override, full match (turn 16/six human attacks), all HTTP security,
   history/resume, container replacement and DB outage/recovery passed locally.
-- [ ] Push, observe CI, redeploy the corrected image, and complete live checks.
+- [x] Push, observe CI, deploy the corrected image, and complete live checks.
+  [Successful corrected-source CI](https://github.com/eusha06/TACTICSIM/actions/runs/41306607485),
+  deployed SHA `a66c3e8b8e2bbc556aeb10cf89c870e064aea9c4`.
 
 - [x] Commit and push verified source to existing `main` without history rewrite,
   using configured user identity and no assistant co-author attribution.
@@ -207,16 +209,22 @@ All results below are local/test evidence, not a Render deployment check.
   [successful final implementation run](https://github.com/eusha06/TACTICSIM/actions/runs/41300576818)
   for full implementation SHA `4c2e3779c388387bcc3ec56971404628f89e10cf`.
   Both Linux runs completed successfully. CI is not a deployment.
-- [ ] Deploy exact successful source through the intended Render service.
-- [ ] Record actual service/deployment ID, full deployed commit and real URL;
+- [x] Deploy exact successful source through the intended Render service.
+- [x] Record actual service/deployment ID, full deployed commit and real URL;
   compare `/health` revision with Render's deployment commit.
-- [ ] Inspect UI in a browser on the deployed version.
-- [ ] Verify deployed new/move/attack/end turn/refresh/history/resume.
-- [ ] Verify two deployed browser sessions cannot access/control each other's matches.
-- [ ] Verify an existing cookie resumes its exact match across a host restart/redeploy.
-- [ ] If moving an existing host/ring, verify a pre-release owner cookie and old save.
+- [x] Inspect UI in a browser on the deployed version.
+- [x] Verify deployed new/move/attack/end turn/refresh/history/resume.
+- [x] Verify two deployed browser sessions cannot access/control each other's matches.
+- [x] Verify an existing cookie resumes its exact match across a host restart/redeploy.
+- [x] Existing-host key import: not applicable to this new hosted installation.
+  Original local matches, legacy tables and migration backups remain intact.
 
-Blocked checks remain unchecked. CI is build/test evidence, not deployment.
+Live acceptance is complete; CI and actual deployed checks are recorded separately.
+Browser play verified moves/attacks/turn/refresh/history/resume; New Match and
+two independent owner sessions were additionally verified through live HTTP checks.
+Render restarts retained the same cookie, match ID, turn, health, actions and history.
+Current `AllowedHosts` is `*.onrender.com`; narrow to the assigned hostname on
+a future configuration update. Free compute cold starts remain an operational limit.
 
 ## Short manual play/deploy checklist
 

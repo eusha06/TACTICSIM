@@ -1,5 +1,45 @@
 # Verification record
 
+## Live Release 0 acceptance — 2026-11-01
+
+Verified https://tacticsim.onrender.com/ on deployed commit
+`a66c3e8b8e2bbc556aeb10cf89c870e064aea9c4`. Render service
+`srv-dbjis38ae00c73ec5vl0`, deployment `dep-dbjji7m7bikc73flln40` showed
+**Live**. Logs showed successful migrations, Production and HTTP binding on
+`0.0.0.0:10000`. `/health` returned HTTP 200, `healthy`, and the exact commit
+before and after restart. [CI for this source passed](https://github.com/eusha06/TACTICSIM/actions/runs/41306607485)
+(Release build, 70 engine tests, 13 PostgreSQL tests and production deployment checks).
+
+The existing `scripts/verify_web.py` was run against the HTTPS public URL using
+Python's certificate-verified TLS context with `certifi` roots. It passed:
+
+- Full human/computer match: computer victory on turn 14 after seven human attacks;
+  completed-state action locking and New Match retaining completed results.
+- Moves, attacks, end turn, refresh, ordered history, review and resume.
+- Independent browser-owner sessions, foreign review/resume rejection, forged
+  cookie rejection and opponent-unit control rejection.
+- Missing/invalid antiforgery tokens, idempotent retries, stale commands,
+  concurrent identical/different commands, and unchanged state after illegal actions.
+
+Visible private Chrome checks confirmed board rendering, Infantry A1→A3,
+Armor B1→B4, Artillery C1→E1, computer response after End Turn, then Artillery
+E1→G1 attacking Armor G5 for 5 damage (16→11 HP). Spent action flags, the
+post-attack movement lock, refresh, History and Resume were inspected.
+New Match passed the deployed HTTP checks; its visible confirmation dialog was
+inspected, but its final browser confirmation was not submitted during this check.
+
+Render Events confirmed actual service restarts at 19:13 and 19:14 Asia/Dhaka.
+The same private browser cookie subsequently restored match
+`a3e76977-e82c-4ea2-971f-b2f5b6ed57f5`: turn 3, Infantry A3, Armor B4,
+Artillery G1 with spent actions, opponent Armor G5 at 11/16 HP, and the original
+12 ordered history events. Resume succeeded after restart. This verifies
+PostgreSQL match storage and Data Protection owner-cookie continuity on the host.
+No functional defect was observed in these checks. Free-host cold starts remain
+an operational limitation; no paid resources or credentials were committed.
+
+The sections below record earlier preparation and local checks; their pending
+hosting statements describe those earlier stages and are superseded by this acceptance.
+
 ## Hosted startup repair — 2026-11-01
 
 The user completed Prisma sign-in. Dedicated Free Prisma `tacticsim` project and

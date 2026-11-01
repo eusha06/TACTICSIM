@@ -5,8 +5,9 @@ submitted and is superseded. Do not create paid resources, upgrade another app,
 or add a payment method. The existing unrelated application was observed using
 Render's Free compute plan; TacticSim can use that same plan as a separate Docker
 service. Render has assigned `https://tacticsim.onrender.com` to the new free
-service; its first deployment failed before application startup. This assigned
-URL is not yet a verified working release.
+service. It is verified healthy on 2026-11-01 at commit
+`a66c3e8b8e2bbc556aeb10cf89c870e064aea9c4`; live play, ownership/security
+checks and saved-match continuity across a Render restart passed.
 
 `render.yaml` selects **free** web compute and an explicitly supplied PostgreSQL
 connection. It creates no database. The fixed .NET 10 image, server rules,
@@ -15,13 +16,14 @@ PostgreSQL game state, Data Protection keys and security boundaries are unchange
 ## PostgreSQL choice and free limits
 
 The user has authorized **Prisma Postgres** as the free database host and the
-other signed-in Render account for free web compute. That Render account showed
-the initial service-creation screen with no existing services. The user completed Prisma sign-in. A dedicated Free project/database named
+other signed-in Render account for free web compute. The user completed Prisma sign-in. A dedicated Free project/database named
 `tacticsim` was created in Singapore and its private runtime/migration
 connections were stored in the new free Render service. Initial Render deploy
 `dep-dbjis40ae00c73ec61pg` built successfully, then exited 127 on its host-entered
 shell command. Use the versioned image startup script below instead of that
-quoted override; live acceptance remains pending until the corrected deploy passes.
+quoted override. Corrected deploy `dep-dbjji7m7bikc73flln40` is Live at
+commit `a66c3e8b8e2bbc556aeb10cf89c870e064aea9c4`; both migrations were
+observed applying successfully. See [live acceptance evidence](verification.md).
 
 Prefer an existing suitable free PostgreSQL database, with private credentials
 and sufficient retention for saved matches. Do not borrow credentials or change
@@ -139,8 +141,9 @@ References: [Prisma connections](https://www.prisma.io/docs/postgres/database/co
 5. Add `ASPNETCORE_ENVIRONMENT=Production`, `PORT=10000`, and
    `ReverseProxy__Enabled=true`. Set `AllowedHosts` to the actual assigned service
    hostname, without scheme/port. If Render assigns it only after creation,
-   bootstrap using `*.onrender.com`, then narrow to the real hostname before
-   acceptance. Include intended custom domains explicitly; do not guess a URL.
+   bootstrap using `*.onrender.com`. The verified service currently uses that
+   Render-only wildcard; prefer narrowing it to `tacticsim.onrender.com` at the
+   next configuration update. Include intended custom domains explicitly; do not guess a URL.
 6. Verify backup/review gates and CI for the exact pushed commit before clicking
    **Deploy web service**. Confirm the compute price is $0 and no paid extras
    are selected. The first deployment can begin immediately on creation.
@@ -150,10 +153,9 @@ References: [Prisma connections](https://www.prisma.io/docs/postgres/database/co
    and resume with the same browser cookie. Keep live checks unchecked until
    actually observed.
 
-The pending prerequisite is Prisma sign-in and its actual free database/connection
-details. Render account access is available; no paid-resource approval is being
-requested. Do not substitute the expiring Render database for the requested
-Prisma setup without a new user instruction.
+Prisma sign-in, database creation, private connection configuration and live
+acceptance are complete. No paid resources were selected. Do not substitute the
+expiring Render database for the established Prisma setup without a new user instruction.
 
 ## Container and proxy behavior
 

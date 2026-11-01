@@ -23,6 +23,7 @@ import urllib.request
 import uuid
 
 import verify_web as web
+import verify_mission as mission
 
 
 def docker(*arguments, **kwargs):
@@ -164,7 +165,8 @@ def main():
             response.read()
             connection.close()
             print("PASS: Production PORT binding, non-root user, HTTP redirect, TLS proxy scheme, Secure/HttpOnly owner cookie and HSTS")
-            web.main()  # Complete match + real antiforgery, isolation, races, history/resume.
+            web.main()
+            mission.main()  # Capture, reset, defeat and saved progress through HTTP.
             state = browser.command(None, "new")
             state = browser.command(state, "move", unitId=1, x=0, y=2)
             state = browser.command(state, "move", unitId=2, x=1, y=3)

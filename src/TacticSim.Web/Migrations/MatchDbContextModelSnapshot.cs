@@ -137,6 +137,9 @@ namespace TacticSim.Web.Migrations
                         .HasMaxLength(24)
                         .HasColumnType("character varying(24)");
 
+                    b.Property<int?>("ObjectiveProgress")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("OccurredAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -188,6 +191,16 @@ namespace TacticSim.Web.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
 
+                    b.Property<int>("HeldRounds")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("LastEvaluatedComputerTurn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
+
                     b.Property<long>("LastEventSequence")
                         .HasColumnType("bigint");
 
@@ -195,6 +208,19 @@ namespace TacticSim.Web.Migrations
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Mission")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)")
+                        .HasDefaultValue("Elimination");
+
+                    b.Property<int?>("ObjectiveX")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ObjectiveY")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("uuid");

@@ -39,6 +39,12 @@ public class LegacyMigrationTests
         });
         await using var db = database.Open();
         Assert.Equal(2, await db.Matches.CountAsync());
+        Assert.All(await db.Matches.ToListAsync(), m =>
+        {
+            Assert.Equal(MissionType.Elimination, m.Mission);
+            Assert.Null(m.ObjectiveX); Assert.Null(m.ObjectiveY);
+            Assert.Equal(0, m.HeldRounds); Assert.Equal(0, m.LastEvaluatedComputerTurn);
+        });
         Assert.Equal(12, await db.Units.CountAsync());
         Assert.Equal(3, await db.Events.CountAsync());
         Assert.Equal(2, await db.Receipts.CountAsync());

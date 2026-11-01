@@ -4,6 +4,12 @@ A small fictional turn-based tactical simulation for a C#/.NET portfolio.
 
 **Current status: playable MVP at [tacticsim.onrender.com](https://tacticsim.onrender.com/).** The Razor Pages board connects to the C# engine using plain JavaScript fetch calls. It includes terrain, unit intel, legal-action highlights, human/computer turns, victory/defeat, New Match, action history, automatic save/resume, and recent completed results. PostgreSQL stores matches, units, ordered events, and accepted commands in relational tables. The Match history page retains earlier matches and can resume an unfinished one. A complete match and refresh/New Match were verified through Chrome controls, along with a 375px mobile layout; see the [verification record and manual checks](docs/verification.md).
 
+**Release 3 implementation:** new operations capture F4 and hold it through two
+completed human/computer rounds. Losing occupancy resets progress; losing the
+squad fails. Clearing all enemies still requires the hold. Existing saves keep
+elimination rules. See [rules](docs/rules.md) and the [release checklist](docs/release-checklist.md)
+for current deployment acceptance.
+
 **Release 2 verified live (`7296834`):** a focused briefing with explicit Begin/Continue, in-game help
 using C# unit/terrain values, and a three-step introduction driven by selection
 and successful moves. Skip/Replay change guidance only. Opening the page never
@@ -111,8 +117,8 @@ dotnet test tests/TacticSim.Tests --no-restore
 
 ## Continuous integration
 
-GitHub Actions builds Release with warnings as errors, runs 84 .NET tests (70 engine,
-14 PostgreSQL), plus eight dependency-free tutorial transition checks, verifies/applies migrations, publishes the web app, builds its
+GitHub Actions builds Release with warnings as errors, runs 101 .NET tests (83 engine,
+18 PostgreSQL), plus eight dependency-free tutorial transition checks, verifies/applies migrations, publishes the web app, builds its
 production Docker image, and runs TLS/proxy/container replacement checks. The
 workflow runs on pushes to `main` and pull requests. CI database credentials are
 for disposable services only; local and deployment secrets stay outside Git.
@@ -124,7 +130,7 @@ Read [the rules](docs/rules.md) for the unit stats, terrain costs, damage formul
 ```csharp
 using TacticSim.Core;
 
-var game = Game.CreateDefault();
+var game = Game.CreateRivergate(); // CreateDefault() retains legacy elimination.
 var legalMoves = game.GetLegalMoves(Side.Human, unitId: 1); // Cell -> shortest cost
 var result = game.Move(Side.Human, unitId: 1, new Position(0, 1));
 if (!result.IsSuccess)

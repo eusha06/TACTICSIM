@@ -16,11 +16,14 @@ public sealed record MoveView(int X, int Y, int Cost);
 public sealed record UnitView(int Id, string Type, string Side, int X, int Y, int Health,
     int MaxHealth, int MovementPoints, int MinimumRange, int MaximumRange, int BaseDamage,
     bool HasMoved, bool HasAttacked, MoveView[] LegalMoves, int[] LegalTargets);
-public sealed record ResultView(string Winner, int Turns, DateTimeOffset CompletedAt);
+public sealed record ResultView(string Winner, int Turns, DateTimeOffset CompletedAt, string MissionType = "Elimination");
+public sealed record MissionView(string Type, int? X, int? Y, int HeldRounds, int RequiredRounds,
+    int LastEvaluatedComputerTurn, bool FriendlyOccupancy, string Instructions, string? Conclusion);
 public sealed record MatchView(Guid MatchId, long Version, long MatchVersion, string CurrentSide, int TurnNumber,
-    string? Winner, string[] Tiles, UnitView[] Units, HistoryEntry[] History, ResultView[] Results);
+    string? Winner, string[] Tiles, UnitView[] Units, HistoryEntry[] History, ResultView[] Results, MissionView? Mission = null);
 public sealed record MatchSummary(Guid MatchId, long MatchVersion, int TurnNumber, string? Winner,
-    DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, bool IsActive, long EventCount);
+    DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, bool IsActive, long EventCount,
+    string MissionType = "Elimination", int HeldRounds = 0, int? ObjectiveX = null, int? ObjectiveY = null);
 public sealed record ServiceReply(int Status, MatchView? State, string? Error = null);
 
 public sealed class MatchService(MatchDbContext db)
@@ -52,7 +55,8 @@ public sealed class MatchService(MatchDbContext db)
         return await db.Matches.AsNoTracking().Where(m => m.OwnerId == owner)
             .OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id)
             .Select(m => new MatchSummary(m.Id, m.Version, m.TurnNumber, m.Winner == null ? null : m.Winner.ToString(),
-                m.CreatedAt, m.UpdatedAt, m.Id == active, m.LastEventSequence)).ToListAsync(ct);
+                m.CreatedAt, m.UpdatedAt, m.Id == active, m.LastEventSequence, m.Mission.ToString(),
+                m.HeldRounds, m.ObjectiveX, m.ObjectiveY)).ToListAsync(ct);
     }
 
     public async Task<ServiceReply> Execute(Guid owner, MatchCommand command, CancellationToken ct)
@@ -85,10 +89,10 @@ public sealed class MatchService(MatchDbContext db)
                 db.Sessions.Add(session);
             }
             match = new SavedMatch { Id = Guid.NewGuid(), OwnerId = owner, Version = 1, CreatedAt = now, UpdatedAt = now };
-            CopyState(match, Game.CreateDefault());
+            CopyState(match, Game.CreateRivergate());
             db.Matches.Add(match);
             AppendEvent(match, command.CommandId, "MatchStarted", 1, Side.Human,
-                "Match started. Your blue squad moves first.", now);
+                "Rivergate started. Hold the communications outpost at F4 through two completed rounds. Your blue squad moves first.", now);
         }
         else if (command.Kind == "resume")
         {
@@ -137,6 +141,7 @@ public sealed class MatchService(MatchDbContext db)
                 entry.Y = action.Destination?.Y;
                 entry.Damage = action.Damage;
                 entry.Destroyed = action.Destroyed;
+                entry.ObjectiveProgress = action.ObjectiveProgress;
             }
         }
 
@@ -189,7 +194,9 @@ public sealed class MatchService(MatchDbContext db)
         if (saved.MapKey != "crossing-v1") throw new InvalidOperationException("Unknown saved map.");
         return Game.Restore(new GameSnapshot(saved.CurrentSide, saved.TurnNumber, MapTiles,
             saved.Units.OrderBy(u => u.UnitId).Select(u => new UnitSnapshot(u.Type, u.UnitId, u.Side,
-                new Position(u.X, u.Y), u.Health, u.HasMoved, u.HasAttacked)).ToArray()));
+                new Position(u.X, u.Y), u.Health, u.HasMoved, u.HasAttacked)).ToArray(),
+            saved.Mission, saved.ObjectiveX is int x && saved.ObjectiveY is int y ? new Position(x, y) : null,
+            saved.HeldRounds, saved.LastEvaluatedComputerTurn));
     }
 
     private static void CopyState(SavedMatch saved, Game game)
@@ -197,6 +204,11 @@ public sealed class MatchService(MatchDbContext db)
         saved.CurrentSide = game.CurrentSide;
         saved.TurnNumber = game.TurnNumber;
         saved.Winner = game.Winner;
+        saved.Mission = game.Mission;
+        saved.ObjectiveX = game.Objective?.X;
+        saved.ObjectiveY = game.Objective?.Y;
+        saved.HeldRounds = game.HeldRounds;
+        saved.LastEvaluatedComputerTurn = game.LastEvaluatedComputerTurn;
         foreach (var unit in game.Units)
         {
             var row = saved.Units.SingleOrDefault(u => u.UnitId == unit.Id);
@@ -228,9 +240,9 @@ public sealed class MatchService(MatchDbContext db)
         var results = await db.Matches.AsNoTracking()
             .Where(m => m.OwnerId == saved.OwnerId && m.Winner != null && m.Id != saved.Id)
             .OrderByDescending(m => m.CompletedAt).Take(10)
-            .Select(m => new ResultView(m.Winner.ToString()!, m.TurnNumber, m.CompletedAt!.Value)).ToListAsync(ct);
+            .Select(m => new ResultView(m.Winner.ToString()!, m.TurnNumber, m.CompletedAt!.Value, m.Mission.ToString())).ToListAsync(ct);
         if (saved.Winner is not null && saved.CompletedAt is DateTimeOffset completed)
-            results.Add(new(saved.Winner.ToString()!, saved.TurnNumber, completed));
+            results.Add(new(saved.Winner.ToString()!, saved.TurnNumber, completed, saved.Mission.ToString()));
         return new(saved.Id, revision, saved.Version, game.CurrentSide.ToString(), game.TurnNumber,
             game.Winner?.ToString(), MapTiles.Select(t => t.ToString()).ToArray(),
             game.Units.Select(u => new UnitView(u.Id, u.GetType().Name, u.Side.ToString(),
@@ -239,7 +251,25 @@ public sealed class MatchService(MatchDbContext db)
                 game.GetLegalMoves(Side.Human, u.Id).Select(cell => new MoveView(cell.Key.X, cell.Key.Y, cell.Value)).ToArray(),
                 game.GetLegalTargets(Side.Human, u.Id).Select(target => target.Id).ToArray())).ToArray(),
             saved.Events.OrderBy(e => e.Sequence).Select(e => new HistoryEntry(e.Turn, e.Side.ToString(), e.Text, e.Sequence)).ToArray(),
-            results.OrderByDescending(r => r.CompletedAt).Take(10).ToArray());
+            results.OrderByDescending(r => r.CompletedAt).Take(10).ToArray(), MissionInfo(game));
+    }
+
+    private static MissionView MissionInfo(Game game)
+    {
+        var capture = game.Mission == MissionType.Rivergate;
+        var coordinate = game.Objective is { } p ? $"{(char)('A' + p.X)}{p.Y + 1}" : "";
+        string? conclusion = game.Winner == Side.Computer ? "Your squad was eliminated." :
+            game.Winner == Side.Human ? capture ? "Outpost secured through two completed rounds." : "Opposing squad eliminated." : null;
+        var instructions = conclusion is not null ? conclusion + " Review the history or begin another operation." : capture
+            ? !game.Units.Any(u => u.Side == Side.Computer && u.IsAlive)
+                ? $"Opponents eliminated. Capture is still required: occupy {coordinate} and End Turn to finish the remaining hold rounds."
+                : game.OutpostHolder is not null
+                    ? $"Friendly unit on {coordinate}. Protect it and End Turn; progress updates after the opponent responds. Losing friendly occupancy resets the hold."
+                    : $"Reach {coordinate} by land. Any friendly unit can secure it. Hold through two completed rounds; losing occupancy resets progress."
+            : "Legacy elimination match: defeat the opposing squad. There is no capture objective.";
+        return new(game.Mission.ToString(), game.Objective?.X, game.Objective?.Y, game.HeldRounds,
+            capture ? Game.RequiredHoldRounds : 0, game.LastEvaluatedComputerTurn,
+            game.OutpostHolder is not null, instructions, conclusion);
     }
 
     private static string Describe(Game game, GameAction action)
@@ -250,6 +280,10 @@ public sealed class MatchService(MatchDbContext db)
         {
             ActionKind.Move => $"{who}: {Name(action.UnitId)} moved to {(char)('A' + action.Destination!.Value.X)}{action.Destination.Value.Y + 1}.",
             ActionKind.Attack => $"{who}: {Name(action.UnitId)} hit {Name(action.TargetId)} for {action.Damage} damage.{(action.Destroyed ? " Target destroyed." : "")}",
+            ActionKind.ObjectiveHeld => $"Outpost held after completed round {action.TurnNumber / 2}: {action.ObjectiveProgress}/{Game.RequiredHoldRounds} rounds.",
+            ActionKind.ObjectiveReset => "Friendly occupancy lost. Outpost progress reset to 0/2 rounds.",
+            ActionKind.MissionCompleted => "Mission success: communications outpost secured through two completed rounds.",
+            ActionKind.MissionFailed => "Mission failed: your squad was eliminated.",
             _ => $"{who} ended the turn."
         };
     }

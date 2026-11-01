@@ -315,3 +315,14 @@ dialog p:not(.eyebrow) { font-size: 14px; color: var(--muted); }
     .help-heading { top: -18px; }
     .help-dialog .unit-table { font-size: 13px; }
 }
+
+/* An actual server-owned objective, never a bridge or client-side capture rule. */
+.mission-status { display: flex; gap: 16px; margin: 0 0 18px; padding: 13px 18px; background: #313d2b; border: 1px solid #8e9161; border-radius: 7px; }
+.objective-progress { font-weight: 750; font-size: 19px; margin: 3px 0 5px; color: #f2e6af; }
+#objective-instructions { color: var(--muted); font-size: 14px; }
+.objective-art { position: absolute; inset: 5%; width: 90%; height: 80%; pointer-events: none; }
+.objective-label { position: absolute; bottom: 4px; font: 700 10px ui-monospace, monospace; padding: 0 3px; color: #fff1bf; background: #4d492e; border-radius: 2px; pointer-events: none; }
+.cell.outpost:not(.selected):not(.inspecting)::before { box-shadow: inset 0 0 0 2px #ead398; }
+.occupied-objective .objective-art { width: 42%; height: 42%; inset: 0 auto auto 0; }
+.occupied-objective .objective-label { display: none; }
+@media(max-width:540px) { .mission-status { padding: 12px; } .objective-progress { font-size: 17px; } .objective-label { font-size: 9px; } }

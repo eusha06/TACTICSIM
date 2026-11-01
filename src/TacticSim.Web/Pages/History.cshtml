@@ -23,6 +23,7 @@
                 <div>
                     <h2>Operation @match.MatchId.ToString("N")[..8] @if (match.IsActive) { <span class="subtle-badge">Current</span> }</h2>
                     <p class="match-meta">@match.CreatedAt.ToString("yyyy-MM-dd HH:mm 'UTC'") · Turn @match.TurnNumber · @match.EventCount history entries</p>
+                    <p class="match-meta">@(match.MissionType == "Rivergate" ? $"Rivergate · Hold the outpost: {match.HeldRounds}/2 rounds · {(char)('A' + match.ObjectiveX!.Value)}{match.ObjectiveY!.Value + 1}" : "Legacy elimination · Defeat the opposing squad")</p>
                     <p class="match-status">@(match.Winner is null ? "In progress" : match.Winner == "Human" ? "Victory" : "Defeat")</p>
                 </div>
                 <div class="match-actions">
@@ -47,6 +48,9 @@
         <section class="panel saved-detail" aria-label="Selected match details">
             <p class="eyebrow">OPERATION @selected.MatchId.ToString("N")[..8]</p>
             <h2>Turn @selected.TurnNumber · @(selected.Winner is null ? "In progress" : selected.Winner == "Human" ? "Victory" : "Defeat")</h2>
+            <p class="match-status">@(selected.Mission?.Type == "Rivergate" ? $"Rivergate · Hold the outpost: {selected.Mission.HeldRounds}/{selected.Mission.RequiredRounds} rounds · {(char)('A' + selected.Mission.X!.Value)}{selected.Mission.Y!.Value + 1}" : "Legacy elimination match")</p>
+            <p class="intro">@selected.Mission?.Instructions</p>
+            @if (selected.Mission?.Conclusion is { } conclusion) { <p class="match-status">@conclusion</p> }
             <div class="table-scroll">
                 <table class="unit-table">
                     <thead><tr><th>Side</th><th>Unit</th><th>Position</th><th>Health</th><th>Move used</th><th>Attack used</th></tr></thead>

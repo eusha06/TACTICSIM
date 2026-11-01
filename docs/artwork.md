@@ -29,3 +29,10 @@ labels, the squad list and selected-unit details.
 
 No mission objectives, decorative crossings, hit effects, facing rules, movement
 animations or new mechanics are implied by the illustrations.
+
+## Rivergate outpost
+
+Release 3 adds a local radio hut/antenna symbol in the same palette, outline and
+lighting style. Only the actual objective tile receives it. A smaller corner
+marker leaves an occupying unit's silhouette, health and name legible. This
+land-based marker adds no crossing or terrain change.

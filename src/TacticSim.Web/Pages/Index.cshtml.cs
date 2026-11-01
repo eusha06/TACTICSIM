@@ -23,17 +23,17 @@ public class IndexModel(BrowserOwner owner, MatchService matches, ILogger<IndexM
         return map.GetDefense(position);
     }
 
-    public sealed record ContinueView(Guid MatchId, int TurnNumber);
+    public sealed record ContinueView(Guid MatchId, int TurnNumber, string MissionType = "Elimination");
 
     public Task<IActionResult> OnGetStateAsync(CancellationToken ct) => WithOwner(async id =>
     {
         var state = await matches.Read(id, ct);
         ContinueView? candidate = state is { Winner: null }
-            ? new(state.MatchId, state.TurnNumber) : null;
+            ? new(state.MatchId, state.TurnNumber, state.Mission?.Type ?? "Elimination") : null;
         if (candidate is null)
         {
             var unfinished = (await matches.History(id, ct)).FirstOrDefault(m => m.Winner is null);
-            if (unfinished is not null) candidate = new(unfinished.MatchId, unfinished.TurnNumber);
+            if (unfinished is not null) candidate = new(unfinished.MatchId, unfinished.TurnNumber, unfinished.MissionType);
         }
         return new JsonResult(new { state, continueMatch = candidate });
     });

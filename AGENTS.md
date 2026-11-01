@@ -52,7 +52,24 @@
 
 A test, deployment, or browser check is only marked passed after observing its result. Historical results in `docs/verification.md` are evidence for that earlier revision, not a substitute for checking a new release. The Development restart script now targets Release binaries. `scripts/verify_deployment.py` separately checks a Production container through a local TLS edge and replaces that container; neither is proof of a deployed Render service.
 
-## Release 2 authorization
+## Release 3 authorization
+
+- Release 3 is authorized: new Rivergate capture-and-hold matches, one reachable
+  land outpost, two consecutive completed human/computer rounds of friendly
+  occupancy, C# authority and exactly one evaluation after each computer turn.
+- Preserve elimination rules for every existing/imported match using an explicit
+  mission discriminator, optional snapshot fields and additive SQL defaults.
+  Keep `crossing-v1` terrain and old receipts/key rings/backups intact.
+- Reset progress whenever friendly occupancy is lost; all friendly units dead
+  means defeat. Eliminating all opponents does not bypass Rivergate capture;
+  empty computer turns still complete rounds. No contradictory elimination win.
+- Persist mission, objective, progress and last evaluated computer turn. Back up
+  and verify before production migration; no production resets or destructive rollback.
+- Verify reachability, an actual winning route and deterministic opponent pressure;
+  update briefing/tutorial, marker/progress, history/results/resume and tests.
+  Reuse free Render/Prisma and stop after Release 3.
+
+## Release 2 authorization (completed)
 
 - Release 2 is complete at `https://tacticsim.onrender.com`, deployed source
   `72968349fc871327f2fb9870e074f3c249193b0d`. Its authorization was: focused

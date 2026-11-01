@@ -10,14 +10,14 @@
     <section id="welcome" class="welcome" aria-labelledby="welcome-title">
         <p class="eyebrow">TACTICSIM</p>
         <h1 id="welcome-title" tabindex="-1">TacticSim: Operation Rivergate</h1>
-        <p class="welcome-intro">A turn-based tactical game. Lead three blue units against an orange computer squad. Move, attack, then End Turn to let the opponent respond.</p>
-        <p class="welcome-objective"><span>YOUR OBJECTIVE</span><strong>Defeat the opposing squad.</strong></p>
+        <p class="welcome-intro">Lead three blue units against a deterministic orange opponent. Fight your way to the communications outpost at F4, then defend it.</p>
+        <p class="welcome-objective"><span>YOUR OBJECTIVE</span><strong>Capture and hold the communications outpost.</strong></p>
         <div class="welcome-actions">
             <button id="continue-operation" class="button primary" type="button" hidden disabled>Continue Operation</button>
             <button id="begin-operation" aria-describedby="welcome-status" class="button primary" type="button" disabled>Begin Operation</button>
             <button class="button secondary help-open" type="button">How to Play</button>
         </div>
-        <p class="welcome-note">Think through your moves. Combat is deterministic, and every accepted action is saved.</p>
+        <p class="welcome-note">Keep any friendly unit alive on F4 through @TacticSim.Core.Game.RequiredHoldRounds completed human-plus-computer rounds. Losing occupancy resets progress. Even after clearing the enemy, finish the hold.</p>
         <p id="welcome-status" class="welcome-status" role="status">Checking for a saved operation…</p>
         <a class="welcome-history" asp-page="/History">Review saved matches</a>
         <div class="welcome-miniatures" aria-hidden="true">
@@ -29,12 +29,15 @@
     </section>
     <div id="play-area" hidden>
     <div class="page-heading">
-        <div><p class="eyebrow">TACTICSIM / FIELD EDITION</p><h1 id="play-title" tabindex="-1">Operation Rivergate<span>.</span></h1><p class="intro">Command three miniatures. Read the terrain. Eliminate the opposing squad.</p></div>
+        <div><p class="eyebrow">TACTICSIM / FIELD EDITION</p><h1 id="play-title" tabindex="-1">Operation Rivergate<span>.</span></h1><p class="intro">Move, attack, and protect your squad. Follow this operation’s objective.</p></div>
         <div class="play-tools"><button id="show-briefing" class="button secondary" type="button">Briefing</button><button class="button secondary help-open" type="button">How to Play</button><button id="new-match" class="button secondary" type="button" disabled><span aria-hidden="true">↻</span> New Match</button></div>
     </div>
     <section id="tutorial" class="tutorial" aria-labelledby="tutorial-title" hidden>
         <div class="tutorial-copy" role="status" aria-live="polite" aria-atomic="true"><p id="tutorial-step" class="eyebrow"></p><h2 id="tutorial-title"></h2><p id="tutorial-message"></p></div>
         <div class="tutorial-actions"><button id="tutorial-done" class="button primary" type="button" hidden>Got it</button><button id="tutorial-skip" class="button secondary" type="button">Skip Tutorial</button></div>
+    </section>
+    <section id="mission-status" class="mission-status" aria-labelledby="mission-title">
+        <div><p class="eyebrow" id="mission-title">OPERATION OBJECTIVE</p><p id="objective-progress" class="objective-progress" role="status" aria-live="polite"></p><p id="objective-instructions"></p></div>
     </section>
     <div id="victory" class="victory-banner" role="status" hidden></div>
     <div class="battle-layout">
@@ -62,7 +65,9 @@
     </div>
     <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title">
         <div class="help-heading"><h2 id="help-title">How to Play</h2><button id="close-help" class="button secondary" type="button" autofocus>Close help</button></div>
-        <p><strong>Objective: defeat the opposing squad.</strong> Blue units are yours; orange units are the opponent. Their silhouettes and names identify Infantry, Armor and Artillery.</p>
+        <p id="help-objective">New Rivergate objective: hold the communications outpost at F4 through @TacticSim.Core.Game.RequiredHoldRounds completed rounds. Older saves keep their elimination objective.</p>
+        <p>Blue units are yours; orange units are the opponent. Their silhouettes and names identify Infantry, Armor and Artillery.</p>
+        <p id="help-capture">Any surviving friendly unit can occupy F4. The count updates once after the computer finishes. Keep friendly occupancy through two consecutive round checks; moving off, even briefly, or losing the holder resets it. Losing your entire squad means defeat. Eliminating every opponent does not win by itself: occupy the outpost and finish the hold using End Turn.</p>
         <ol class="help-steps"><li><b>Select a blue unit.</b> Its details show remaining Move and Attack actions.</li><li><b>Move, then attack.</b> Each unit may move once and attack once per turn. A move is optional; attacking locks movement for that turn.</li><li><b>Choose marked cells.</b> Round markers are legal moves; their numbers show total route cost. Dashed orange targets can be attacked. Movement is four-directional; attack distance counts horizontal and vertical cells.</li><li><b>End Turn.</b> The computer uses the same rules and responds immediately. Your surviving units receive fresh actions on your next turn.</li></ol>
         <h3>Units and terrain</h3>
         <p>These values come from the current game rules. Spend up to a unit's movement budget in one move. Water and occupied cells cannot be crossed.</p>

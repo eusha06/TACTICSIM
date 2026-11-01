@@ -71,6 +71,20 @@
     <path d="M0 0h100v5Q75 9 50 5T0 7Z" fill="#aaa779"/>
     <path d="M0 7Q25 3 50 5t50 0" fill="none" stroke="#a3beb1" stroke-width="2" opacity=".6"/>
   </symbol>
+  <symbol id="outpost" viewBox="0 0 100 100">
+    <ellipse cx="56" cy="75" rx="35" ry="13" fill="#344b39" opacity=".3"/>
+    <g stroke="#34433a" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M22 49 52 35 80 47 50 62Z" fill="#e4d6a4"/>
+      <path d="M22 49v23l28 15V62Z" fill="#b5a16e"/>
+      <path d="m50 62 30-15v24L50 87Z" fill="#927a54"/>
+      <path d="m18 48 32-19 35 16-33 19Z" fill="#e6cd84"/>
+      <path d="m52 64 33-19-4 7-29 18Z" fill="#a7854e"/>
+      <path d="M30 60v11l10 5V65Z" fill="#36535b"/>
+      <path d="M61 65v13l10-6V59Z" fill="#445454"/>
+      <path d="M57 37V12M51 16l13-7M50 26l13-7" fill="none" stroke-width="3"/>
+      <path d="M40 9q-9 7-3 16M74 4q9 7 5 17" fill="none" stroke="#f6e7ac" stroke-width="3"/>
+    </g>
+  </symbol>
   <symbol id="infantry" viewBox="0 0 100 100">
     <ellipse cx="53" cy="81" rx="40" ry="10" fill="#263a30" opacity=".2"/>
     <use href="#soldier" transform="translate(28 43) scale(.85)"/>

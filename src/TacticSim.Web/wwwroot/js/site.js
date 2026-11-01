@@ -184,6 +184,11 @@
         byId("welcome-status").textContent = busy ? "Retrieving your operation…" : !loaded ? "Connect to check your saved operation." :
             continueMatch ? "An unfinished operation is ready. Begin starts a separate match; your saves stay in Match history." :
             state?.winner ? "Your last operation is complete. Begin again or review your saved matches." : "Ready when you are. Begin Operation starts your first match.";
+        byId("help-objective").textContent = playing && state?.mission ? state.mission.instructions :
+            "New Rivergate objective: capture F4 and hold it through two completed human-plus-computer rounds. Older saves keep their elimination objective.";
+        byId("help-capture").hidden = playing && state?.mission?.type !== "Rivergate";
+        if (!playing && continueMatch?.missionType === "Elimination") byId("welcome-status").textContent =
+            "Continue restores your legacy elimination match. Begin creates a separate Rivergate capture mission; all saves stay in Match history.";
         byId("replay-tutorial").disabled = locked || !state;
         byId("replay-note").textContent = state ? "Replay changes guidance only; your match and remaining actions stay as they are." : "Begin or continue an operation to practice without resetting it.";
         byId("new-match").disabled = locked || !state;
@@ -191,6 +196,10 @@
         board.setAttribute("aria-busy", String(busy));
         if (!state) return;
         const selected = state.units.find(u => u.id === selectedId);
+        const mission = state.mission;
+        const capture = mission?.type === "Rivergate";
+        byId("objective-progress").textContent = capture ? `Hold the outpost: ${mission.heldRounds}/${mission.requiredRounds} rounds · ${String.fromCharCode(65 + mission.x)}${mission.y + 1}` : "Legacy elimination match";
+        byId("objective-instructions").textContent = mission?.instructions ?? "Defeat the opposing squad. This saved match has no capture objective.";
         const actionable = selected?.side === "Human" && selected.health > 0 && !state.winner;
         // These lists come from C#. JavaScript never calculates a route, range, or damage.
         const moves = actionable ? selected.legalMoves : [];
@@ -203,21 +212,25 @@
             const unit = state.units.find(u => u.health > 0 && u.x === x && u.y === y);
             const move = moves.find(m => m.x === x && m.y === y);
             const target = unit && targets.includes(unit.id);
+            const outpost = capture && mission.x === x && mission.y === y;
             const cell = element("button", `cell ${terrain.toLowerCase()}`);
             cell.type = "button";
             cell.dataset.cell = String(index);
             cell.disabled = locked;
+            if (outpost) cell.classList.add("outpost", unit ? "occupied-objective" : "empty-objective");
             if (unit) cell.classList.add(unit.side === "Human" ? "friendly-unit" : "opposing-unit");
             if (move) cell.classList.add("legal-move");
             if (target) cell.classList.add("attack-target");
             if (unit?.id === selectedId) cell.classList.add(unit.side === "Human" ? "selected" : "inspecting");
             const coordinate = `${String.fromCharCode(65 + x)}${y + 1}`;
             const label = [coordinate, terrain, unit ? `${unit.side === "Human" ? "Your" : "Opponent"} ${unit.type}, ${unit.health} of ${unit.maxHealth} health` : "empty"];
+            if (outpost) label.push(`communications outpost, hold ${mission.heldRounds} of ${mission.requiredRounds} rounds`);
             if (move) label.push(`legal move, cost ${move.cost}`);
             if (target) label.push("legal attack target");
             cell.setAttribute("aria-label", label.join(", "));
             cell.setAttribute("aria-pressed", String(unit?.id === selectedId));
             cell.append(terrainArt(terrain, x, y));
+            if (outpost) cell.append(illustration("outpost", "objective-art"), element("span", "objective-label", "OUTPOST"));
             if (unit) {
                 const tokenNode = element("span", `unit-token ${unit.side.toLowerCase()} ${unit.hasAttacked ? "spent" : ""}`);
                 tokenNode.setAttribute("aria-hidden", "true");
@@ -242,7 +255,7 @@
         byId("board-hint").textContent = state.winner ? "Operation complete" : selected ? `${selected.type} #${selected.id} selected${actionable ? " · choose a cell or target" : " · opponent unit"}` : "Select a blue unit to begin";
         byId("victory").hidden = !state.winner;
         if (state.winner) {
-            byId("victory").replaceChildren(element("b", "", state.winner === "Human" ? "Victory. The field is yours." : "Defeat. Your squad was eliminated."), document.createTextNode(`Completed on turn ${state.turnNumber}. Start a new match to try another plan.`));
+            byId("victory").replaceChildren(element("b", "", capture ? state.winner === "Human" ? "Mission success." : "Mission failed." : state.winner === "Human" ? "Victory. The field is yours." : "Defeat. Your squad was eliminated."), document.createTextNode(`${mission?.conclusion ?? ""} Completed on turn ${state.turnNumber}.`));
         }
         renderDetails(selected);
         renderSquad();
@@ -264,7 +277,9 @@
                 !selected.legalMoves.length ? "No legal destination for this unit. Choose another friendly unit, or End Turn." :
                 "Choose a round move marker. Its number is the route cost. A successful move advances this step.";
         }
-        if (step === 2) message = "Attack a dashed orange target once. Attacking locks movement. End Turn lets the opponent respond; your actions reset next turn. How to Play stays available.";
+        if (step === 2) message = state.mission?.type === "Rivergate"
+            ? "Attack dashed orange targets to clear threats. Protect a friendly unit on the outpost, then End Turn. Hold progress updates after the opponent responds; losing occupancy resets it. Secure two rounds, even if every opponent is eliminated."
+            : "Attack a dashed orange target once. Attacking locks movement. End Turn lets the opponent respond; your actions reset next turn. How to Play stays available.";
         if (state.winner) message = "This operation is complete. Begin a new one from Briefing when you want to practice. Replay never resets a match.";
         for (const [id, text] of [["tutorial-step", `FIRST ORDERS · ${step + 1} OF 3`], ["tutorial-title", titles[step]], ["tutorial-message", message]]) {
             if (byId(id).textContent !== text) byId(id).textContent = text;
@@ -336,7 +351,7 @@
             history.append(row);
         }
         const results = byId("results"); results.replaceChildren();
-        for (const result of state.results) results.append(element("li", "", `${result.winner === "Human" ? "Victory" : "Defeat"} · ${result.turns} turns · ${new Date(result.completedAt).toLocaleDateString()}`));
+        for (const result of state.results) results.append(element("li", "", `${result.missionType === "Rivergate" ? result.winner === "Human" ? "Rivergate success" : "Rivergate failure" : result.winner === "Human" ? "Legacy victory" : "Legacy defeat"} · ${result.turns} turns · ${new Date(result.completedAt).toLocaleDateString()}`));
         if (!state.results.length) results.append(element("li", "", "No completed matches yet."));
     }
 

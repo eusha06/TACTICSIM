@@ -27,6 +27,9 @@ public sealed class MatchDbContext(DbContextOptions<MatchDbContext> options) : D
         matches.HasIndex(m => new { m.OwnerId, m.CreatedAt });
         matches.Property(m => m.Version).IsConcurrencyToken();
         matches.Property(m => m.MapKey).HasMaxLength(32);
+        matches.Property(m => m.Mission).HasConversion<string>().HasMaxLength(24).HasDefaultValue(MissionType.Elimination);
+        matches.Property(m => m.HeldRounds).HasDefaultValue(0);
+        matches.Property(m => m.LastEvaluatedComputerTurn).HasDefaultValue(0);
         matches.Property(m => m.CurrentSide).HasConversion<string>().HasMaxLength(16);
         matches.Property(m => m.Winner).HasConversion<string>().HasMaxLength(16);
         matches.HasOne<BrowserSession>().WithMany().HasForeignKey(m => m.OwnerId).OnDelete(DeleteBehavior.Restrict);
@@ -73,6 +76,11 @@ public sealed class SavedMatch
     public Guid OwnerId { get; set; }
     public long Version { get; set; }
     public string MapKey { get; set; } = "crossing-v1";
+    public MissionType Mission { get; set; } = MissionType.Elimination;
+    public int? ObjectiveX { get; set; }
+    public int? ObjectiveY { get; set; }
+    public int HeldRounds { get; set; }
+    public int LastEvaluatedComputerTurn { get; set; }
     public Side CurrentSide { get; set; }
     public int TurnNumber { get; set; }
     public Side? Winner { get; set; }
@@ -111,6 +119,7 @@ public sealed class SavedEvent
     public int? Y { get; set; }
     public int Damage { get; set; }
     public bool Destroyed { get; set; }
+    public int? ObjectiveProgress { get; set; }
     public string Text { get; set; } = "";
     public DateTimeOffset OccurredAt { get; set; }
 }

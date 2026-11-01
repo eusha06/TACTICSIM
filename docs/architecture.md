@@ -46,7 +46,7 @@ Razor Pages applies antiforgery validation to the JSON POST handler. Fetch sends
 | Table | Stored data |
 | --- | --- |
 | `GameSessions` | Protected-cookie owner ID, active match ID, session revision concurrency token |
-| `GameMatches` | Match ID/owner, version concurrency token, fixed map key, side/turn, winner, timestamps, last event sequence |
+| `GameMatches` | Match ID/owner, version concurrency token, fixed map key, side/turn, winner, mission/objective/hold/evaluation state, timestamps, last event sequence |
 | `MatchUnits` | Composite match/unit ID, unit type/side, coordinates, health, move/attack flags |
 | `MatchEvents` | Composite match/sequence key, command link, turn/side/kind, unit/target/destination, actual damage/destruction, display text and timestamp |
 | `MatchCommands` | Unique owner/command ID, match, accepted intent, expected/resulting match versions, fingerprint and cached HTTP response |
@@ -126,3 +126,26 @@ one-string configurations remain compatible. No production database files are
 stored in the web container. See [deployment.md](deployment.md) for the host's
 trust assumptions, account steps, migration/rollback procedure, and evidence
 limits. The Blueprint is deployment preparation, not evidence of a hosted app.
+
+## Release 3 mission compatibility
+
+`MissionType` is an explicit Core enum. Optional appended snapshot fields default
+to Elimination/null/zero, preserving old JSON and callers. `CreateRivergate()`
+opts new browser matches into capture without changing `crossing-v1`. Restore
+validates progress and computes victory from mission state and living units.
+Only `EndTurn(Computer)` evaluates capture, guarded by the persisted completed
+computer-turn number. Move/attack immediately reset lost occupancy. Events record
+hold/reset/completion/failure and nullable progress; history is still not a replay.
+
+The additive `20261101191642_RivergateMission` migration adds five match columns
+and nullable event progress. `Mission` defaults to `Elimination`, coordinates to
+null, counters to zero. Thus both previously relational games and old snapshots
+imported by InitialRelational retain elimination. No rows are deleted/reseeded.
+Old response receipts omit the new optional mission DTO and remain replayable;
+canonical state still comes from relational rows, never the receipt JSON.
+Mission fields, units, ordered events, versions and receipt commit together.
+
+The browser renders mission coordinates, counts, instructions and conclusions
+from C#. It draws an original SVG outpost only on the server-supplied objective,
+with a smaller marker when occupied. Briefing/help/tutorial/history distinguish
+legacy elimination saves from new capture matches. No browser capture rules.

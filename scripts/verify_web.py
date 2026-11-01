@@ -78,7 +78,7 @@ def main():
     assert a.state() is None and b.state() is None
     status, briefing, _ = a.request("/")
     assert status == 200 and 'id="welcome"' in briefing and 'Begin Operation' in briefing
-    assert 'defeat the opposing squad' in briefing.lower() and 'id="help-dialog"' in briefing
+    assert 'capture and hold the communications outpost' in briefing.lower() and 'id="help-dialog"' in briefing
     assert 'range 2–4 cells' in briefing and 'Terrain does not block line of sight' in briefing
     assert a.state() is None and a.request("/?handler=State")[1]["continueMatch"] is None
     assert a.request("/History")[0] == 200 and a.state() is None
@@ -94,6 +94,8 @@ def main():
     assert status == 200, data
     state = data["state"]
     assert state["version"] == 1 and len(state["units"]) == 6
+    assert state["mission"]["type"] == "Rivergate" and state["mission"]["heldRounds"] == 0
+    assert (state["mission"]["x"], state["mission"]["y"]) == (5, 3)
     assert a.request("/?handler=Command", new)[1]["state"] == state
     assert a.request("/?handler=Command", {**new, "kind": "endTurn"})[0] == 409
     assert b.state() is None
@@ -151,8 +153,12 @@ def main():
             if unit["health"] == 0 or state["winner"]:
                 continue
             enemies = [u for u in state["units"] if u["side"] == "Computer" and u["health"] > 0]
-            if not unit["legalTargets"] and unit["legalMoves"]:
+            mission = state["mission"]
+            holding = mission["type"] == "Rivergate" and (unit["x"], unit["y"]) == (mission["x"], mission["y"])
+            if not unit["legalTargets"] and unit["legalMoves"] and not holding:
                 def preference(cell):
+                    if not enemies:
+                        return abs(cell["x"] - mission["x"]) + abs(cell["y"] - mission["y"]), 0, cell["cost"], cell["y"], cell["x"]
                     distances = [abs(cell["x"] - enemy["x"]) + abs(cell["y"] - enemy["y"]) for enemy in enemies]
                     band = min(max(unit["minimumRange"] - distance, distance - unit["maximumRange"], 0) for distance in distances)
                     return band, min(distances), cell["cost"], cell["y"], cell["x"]
@@ -165,6 +171,8 @@ def main():
         if not state["winner"]:
             state = a.command(state, "endTurn")
     assert state["winner"] is not None, "Match did not finish in 80 rounds"
+    if state["winner"] == "Human":
+        assert state["mission"]["heldRounds"] == 2, "Rivergate cannot be won by elimination alone"
     assert attacks > 0, "Human strategy never attacked"
     assert state["results"] and state["results"][0]["winner"] == state["winner"]
     assert all(not unit["legalMoves"] and not unit["legalTargets"] for unit in state["units"])

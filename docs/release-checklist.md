@@ -1,5 +1,20 @@
 # Operation Rivergate — release checklist
 
+## Release 3 — Rivergate capture and hold (current)
+
+- Starting commit: `7873573`, branch `main`; date 2026-11-02 (Asia/Dhaka).
+- Target: existing free Render `srv-dbjis38ae00c73ec5vl0`,
+  https://tacticsim.onrender.com/, existing Prisma PostgreSQL/key ring.
+- [x] Inspect engine/restoration, relational model, old SQL import and receipt cache.
+- [x] Implement explicit Rivergate mission; additive defaults keep all old matches elimination.
+- [x] Prove F4 reachable/unoccupied, capture/reset/defeat/restoration/duplicate safety.
+- [x] Play a winning mission against meaningful deterministic opposition.
+- [x] Update objective artwork, instructions/tutorial, history/results/resume display.
+- [x] Back up/rehearse migration preserving original rows, keys and legacy tables.
+- [ ] Release build, engine/PostgreSQL/HTTP/tutorial/deployment checks and browser layouts.
+- [ ] Commit/push, green CI, deploy and verify exact live source and old/new saves.
+- [ ] Record evidence and stop after Release 3.
+
 ## Release 2 — briefing and guided interaction (complete)
 
 - Starting commit: `b09c985ce663696776c7568defa5c53f8319a255`, branch `main`.
@@ -335,4 +350,4 @@ a future configuration update. Free compute cold starts remain an operational li
 
 Release 0 stopped at its original gate. The separately authorized Release 1 is
 recorded above; Release 2 was subsequently authorized and is now complete.
-Stop after Release 2. No following release is authorized.
+Historical Release 2 gate; Release 3 is now separately authorized above. Stop after Release 3.

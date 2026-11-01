@@ -311,3 +311,26 @@ Official references: [Render Docker](https://render.com/docs/docker),
 [Blueprint fields](https://render.com/docs/blueprint-spec),
 [EF Data Protection storage](https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/overview?view=aspnetcore-10.0#persist-keys-in-a-database-persistkeystodbcontext),
 [forwarded headers](https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/proxy-load-balancer?view=aspnetcore-10.0).
+
+## Release 3 additive upgrade
+
+Before deploying, take a private full PostgreSQL custom-format backup including
+DataProtectionKeys and legacy tables, using the existing direct migration
+connection with TLS. Restore it into a separate disposable database, apply
+`20261101191642_RivergateMission`, and compare original table data/keys before
+changing production. Never test restore against the production database.
+
+This migration adds only mission/objective/progress/evaluation columns and
+nullable event progress. All old rows default to Elimination; no UPDATE, DELETE,
+reseed or terrain/key change. Retain original archives and migration backups.
+After the backup gate, deploy the exact green-CI commit through the existing
+Render manual deployment. The existing migrate-then-start command applies it
+once before readiness; the direct migration override remains private.
+
+Verify /health revision, original rows/key ring, an old cookie/save/receipt,
+new capture/defeat and 1/2-round refresh/history/resume. **Do not redeploy pre-R3
+code after Rivergate games exist**: it would interpret their victory incorrectly.
+The Down migration deliberately refuses to drop mission state. Fix forward;
+restoring a verified backup is an explicit recovery operation that loses later
+writes and requires an operator's separate recovery decision. Never delete or
+reseed production as a rollback shortcut.

@@ -21,7 +21,12 @@ public sealed class ComputerOpponent
                 var candidates = game.GetLegalMoves(Side.Computer, unit.Id)
                     .Append(new KeyValuePair<Position, int>(unit.Position, 0));
                 var destination = candidates
-                    .OrderBy(cell => enemies.Min(enemy =>
+                    .OrderBy(cell => game.Mission == MissionType.Rivergate
+                        ? game.OutpostHolder is { } holder
+                            ? DistanceToRange(cell.Key.ManhattanDistanceTo(holder.Position), unit)
+                            : cell.Key.ManhattanDistanceTo(game.Objective!.Value)
+                        : 0)
+                    .ThenBy(cell => enemies.Min(enemy =>
                         DistanceToRange(cell.Key.ManhattanDistanceTo(enemy.Position), unit)))
                     .ThenBy(cell => enemies.Min(enemy => cell.Key.ManhattanDistanceTo(enemy.Position)))
                     .ThenBy(cell => cell.Value)
@@ -35,7 +40,7 @@ public sealed class ComputerOpponent
             }
 
             // Lowest health first, then stable ID. No random choices.
-            var target = targets.OrderBy(t => t.Health).ThenBy(t => t.Id).FirstOrDefault();
+            var target = targets.OrderBy(t => game.Mission == MissionType.Rivergate && t == game.OutpostHolder ? 0 : 1).ThenBy(t => t.Health).ThenBy(t => t.Id).FirstOrDefault();
             if (target is not null)
                 RequireSuccess(game.Attack(Side.Computer, unit.Id, target.Id));
         }

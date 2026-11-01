@@ -1,5 +1,36 @@
 # Verification record
 
+## Release 3 local acceptance (2026-11-02)
+
+Release build with warnings as errors passed: zero warnings/errors. All 101 .NET
+tests passed (83 Core, 18 PostgreSQL), and eight tutorial transition tests passed.
+Python scripts compile, site.js syntax and whitespace checks pass. The HTTP
+regression suite passed CSRF, separate-owner reads/mutations, forged cookies,
+stale versions, identical/concurrent retries, rejected-action rollback,
+new/history/review/resume and completion locking against the Release DLL.
+
+`verify_mission.py` completed an actual victory (turn 17) and defeat (turn 14).
+The opponent occupied F4 and killed Infantry and Armor; Artillery survived with
+8 HP. Eliminating the enemy left the game active at 0/2; F4 occupancy followed
+by two End Turns produced 1/2 then 2/2. Refresh, duplicate/stale End Turn,
+New Match/Resume and review at 1/2 preserved exact progress and unit state.
+Core tests cover temporary lost occupancy, holder death, all unit types,
+restoration, old snapshots, defeat and legacy elimination. PostgreSQL tests
+cover concurrent duplicate evaluation, save/resume, transactional event failure,
+and old imported matches/receipt responses without mission metadata.
+
+Both the local database and the actual hosted Prisma public schema were backed
+up privately, restored into separate disposable local databases and upgraded.
+All original-column table checksums matched after rehearsal; all 21 hosted
+matches defaulted to Elimination. Hosted backup included 1 DataProtectionKeys,
+21 matches, 12 sessions, 149 commands, 271 events and 126 units. Archives remain
+outside Git in private temporary directories; legacy tables/backups were retained.
+No production migration or deployment is implied by these rehearsal results.
+
+Local native Chrome showed the F4 marker and 0/2 guidance, accepted moves for
+all three unit types and a computer advance that occupied F4 and wounded
+Infantry. Further browser/live evidence is recorded in the release checklist.
+
 ## Live Release 2 acceptance
 
 https://tacticsim.onrender.com/ serves

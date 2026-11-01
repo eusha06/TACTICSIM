@@ -15,6 +15,7 @@ ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_HTTP_PORTS=8080
 EXPOSE 8080
 COPY --from=build /publish/ ./
+COPY --from=build /source/src/TacticSim.Web/Deployment/start-web.sh ./start-web.sh
 USER $APP_UID
-# Render can replace CMD with the full pre-deploy command from render.yaml.
-CMD ["dotnet", "TacticSim.Web.dll"]
+# Exec-form arguments avoid relying on the host's shell-string parsing.
+CMD ["/bin/sh", "/app/start-web.sh"]

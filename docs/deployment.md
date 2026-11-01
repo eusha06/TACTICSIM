@@ -4,7 +4,9 @@ The user requires a **free deployment**. The earlier paid proposal was not
 submitted and is superseded. Do not create paid resources, upgrade another app,
 or add a payment method. The existing unrelated application was observed using
 Render's Free compute plan; TacticSim can use that same plan as a separate Docker
-service. No TacticSim deployment URL has yet been assigned or verified.
+service. Render has assigned `https://tacticsim.onrender.com` to the new free
+service; its first deployment failed before application startup. This assigned
+URL is not yet a verified working release.
 
 `render.yaml` selects **free** web compute and an explicitly supplied PostgreSQL
 connection. It creates no database. The fixed .NET 10 image, server rules,
@@ -14,9 +16,12 @@ PostgreSQL game state, Data Protection keys and security boundaries are unchange
 
 The user has authorized **Prisma Postgres** as the free database host and the
 other signed-in Render account for free web compute. That Render account showed
-the initial service-creation screen with no existing services. Prisma account
-sign-in is being completed by the user; no database/credential or hosted
-deployment is claimed until it is actually available and verified.
+the initial service-creation screen with no existing services. The user completed Prisma sign-in. A dedicated Free project/database named
+`tacticsim` was created in Singapore and its private runtime/migration
+connections were stored in the new free Render service. Initial Render deploy
+`dep-dbjis40ae00c73ec61pg` built successfully, then exited 127 on its host-entered
+shell command. Use the versioned image startup script below instead of that
+quoted override; live acceptance remains pending until the corrected deploy passes.
 
 Prefer an existing suitable free PostgreSQL database, with private credentials
 and sufficient retention for saved matches. Do not borrow credentials or change
@@ -74,7 +79,7 @@ existing credentials and key ring. Prisma's direct connection is needed for EF's
 session-level migration lock; the pooler does not preserve session state between
 transactions. Bounded client pools fit the small free-tier connection limits.
 
-The free Render command already runs `--migrate` before the server. Both processes
+The image startup script runs `--migrate` before the server. Both processes
 inherit the variables: migrations select `MigrationConnection` when nonempty;
 the server always selects `DefaultConnection`. Without the optional override,
 existing installations continue using their original default string. Importing
@@ -108,20 +113,18 @@ References: [Prisma connections](https://www.prisma.io/docs/postgres/database/co
    | Root directory | Empty (repository root) |
    | Build context / Dockerfile | `.` / `./Dockerfile` |
    | Health check | `/health` |
+   | Docker Command | **Empty**; use the image startup script |
    | Pre-deploy command | **Empty**; unavailable on Free compute |
    | Auto-deploy | Off; deploy reviewed commits manually |
 
-   Set **Docker Command** to the following exact command (also in `render.yaml`):
-
-   ```sh
-   /bin/sh -c 'dotnet TacticSim.Web.dll --migrate && exec dotnet TacticSim.Web.dll'
-   ```
-
-   This explicitly applies reviewed migrations before starting the web process.
-   A migration failure prevents startup. A restart reruns the EF migration check,
-   which is a no-op when current; EF's database migration lock coordinates it.
-   Backups/review remain required **before** each new schema deployment. Normal
-   application startup outside this host override does not migrate automatically.
+   Leave **Docker Command empty**. The image's exec-form `CMD` runs
+   `/bin/sh /app/start-web.sh`, with the script copied from
+   `src/TacticSim.Web/Deployment/start-web.sh`. It runs the reviewed `--migrate`
+   command and then replaces the shell with the web process. Migration failure
+   prevents startup. No host-specific multi-command/quote parsing is required.
+   Existing quoted overrides must be cleared before redeploying this image.
+   A restart safely reapplies the migration check; database locking coordinates
+   concurrent attempts. Review and back up before deploying new schema changes.
 4. Set **`ConnectionStrings__DefaultConnection`** in Render's secret environment
    to an **Npgsql key/value string**, not the provider's `postgresql://` URL:
 
@@ -158,10 +161,10 @@ The multi-stage Dockerfile restores/publishes only Core/Web with the .NET 10 SDK
 then runs the ASP.NET 10 runtime as its non-root `app` user. Its fixed working
 directory is `/app`. No PostgreSQL files, dumps, key files, SDK, or test tooling
 are copied into the runtime image. `.dockerignore` limits the source context.
-The exec-form `CMD` starts `dotnet TacticSim.Web.dll`. Free Render overrides it
-with the migrate-then-start shell command above. The Docker check bootstraps an
-empty database using that exact command under a 512 MB limit, then reapplies the
-migration and replaces the web container to check state/key continuity.
+The exec-form `CMD` invokes the versioned startup script directly. The Docker
+check uses this default image command to bootstrap an empty database under a
+512 MB limit, reapplies migrations, verifies the direct-connection override, and
+replaces the web container to check state/key continuity.
 
 `PORT` binds HTTP on `0.0.0.0` (default image port 8080 if absent); explicit
 `--urls`/`ASPNETCORE_URLS` overrides it. Render supplies 10000. TLS terminates at
@@ -229,7 +232,8 @@ If an existing hosted app used filesystem keys, **before switching traffic**:
 
 ## Safe migrations and recovery
 
-Normal startup never migrates, reseeds, or calls `EnsureCreated`. The explicit
+Normal `dotnet TacticSim.Web.dll` startup never migrates, reseeds, or calls
+`EnsureCreated`; the Docker startup script explicitly invokes `--migrate` first. The explicit
 `--migrate` command exits after `Database.MigrateAsync`. Run one deployment at a
 time against the intended database; EF's PostgreSQL migration lock coordinates
 the migration itself. Do not point test scripts/fixtures at production.
@@ -266,7 +270,7 @@ Before each schema deployment:
    rows or old backups are deleted by this release. Never use a down migration
    for rollback: its key-table drop would lose ownership keys.
 4. After backup review, deploy the new image with the explicit free
-   migrate-then-start command. Failed migrations prevent startup; inspect the
+   image startup script. Failed migrations prevent startup; inspect the
    error rather than dropping tables. Re-running an applied migration is a no-op.
    Do not put database credentials in the image or run migrations during build.
 5. Verify health, saved-match counts and old cookies, then allow traffic. This
@@ -276,8 +280,8 @@ Before each schema deployment:
    separate, deliberate recovery plan and write freeze, never automatic cleanup.
 
 An operator with database access can alternatively apply the published
-`--migrate` command before deployment, then use the default server-only Docker
-command. Free compute has no provider shell or one-off jobs; do not rely on those
+`--migrate` command before deployment, then explicitly override Docker Command with
+`dotnet TacticSim.Web.dll` for a server-only start. Free compute has no provider shell or one-off jobs; do not rely on those
 paid features to prepare its schema. No paid plan is required by this repository.
 
 ## Reproducible checks

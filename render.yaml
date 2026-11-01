@@ -10,9 +10,8 @@ services:
     dockerContext: .
     # Deploy manually after CI and backup review, never on an unchecked push.
     autoDeployTrigger: "off"
-    # Free compute has no pre-deploy hook or shell. Apply reviewed migrations
-    # before serving; a failed migration prevents the web process from starting.
-    dockerCommand: /bin/sh -c 'dotnet TacticSim.Web.dll --migrate && exec dotnet TacticSim.Web.dll'
+    # Use the image's startup script: migrate successfully, then serve requests.
+    # No shell string override or paid pre-deploy hook is needed.
     healthCheckPath: /health
     envVars:
       - key: ASPNETCORE_ENVIRONMENT

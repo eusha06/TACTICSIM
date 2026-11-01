@@ -1,5 +1,21 @@
 # Verification record
 
+## Hosted startup repair — 2026-11-01
+
+The user completed Prisma sign-in. Dedicated Free Prisma `tacticsim` project and
+database were created in Singapore; private pooled/direct settings were stored
+in a new Free Render service. Render assigned `https://tacticsim.onrender.com`.
+Initial deploy `dep-dbjis40ae00c73ec61pg` of `83406f0` built successfully but
+exited 127 before application startup. The quoted host command was inspected;
+the URL is not yet verified healthy.
+
+Moved the startup sequence into versioned `Deployment/start-web.sh`, invoked by
+the image's exec-form CMD; the host override must be cleared. Local Docker
+verification of that default command passed under 512 MB, including empty-DB
+bootstrap, direct migration override, TLS/full match (turn 16/six attacks),
+security/isolation/history/resume, container replacement and outage/recovery.
+Corrected live deployment and acceptance checks remain pending.
+
 ## Prisma Postgres preparation — 2026-11-01
 
 The user authorized Prisma Postgres plus another Render account, retaining a $0

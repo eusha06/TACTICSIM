@@ -82,8 +82,8 @@ the same. Keys and game tables must be backed up together.
 scheme before redirection/cookie creation. No forwarded host or client identity
 is accepted. `/health` reads required tables and exposes only readiness/revision,
 including 503 during database failure; it creates no owners, keys, or matches.
-Normal application startup never applies migrations. The free Render Docker
-command explicitly runs `--migrate` and starts the server only after success,
+Normal .NET application startup never applies migrations. The Docker image's
+versioned `Deployment/start-web.sh` explicitly runs `--migrate` and starts the server only after success,
 after the operator's review/backup gates. For transaction-pooled hosts such as
 Prisma Postgres, optional `ConnectionStrings__MigrationConnection` is selected
 only by `--migrate` to keep the migration lock on a direct session. Runtime and

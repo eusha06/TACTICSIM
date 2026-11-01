@@ -68,7 +68,6 @@ def main():
         docker("run", "-d", "--name", application, "--network", prefix, "--memory", "512m",
             "-p", "127.0.0.1::10000", "-e", "PORT=10000", "-e", "ReverseProxy__Enabled=true",
             "-e", "AllowedHosts=localhost;127.0.0.1;play.example.test", "-e", "ConnectionStrings__DefaultConnection", image,
-            "/bin/sh", "-c", "dotnet TacticSim.Web.dll --migrate && exec dotnet TacticSim.Web.dll",
             env=environment)
         backend[0] = int(docker("port", application, "10000/tcp").rsplit(":", 1)[1])
         wait_for(lambda: ready()[0] == 200, "production readiness")

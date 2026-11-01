@@ -7,7 +7,8 @@
 - Starting commit: `797d3a429bf6453454d562867b1075252ddaedf8`.
 - Repository/branch: https://github.com/eusha06/TACTICSIM — `main`.
 - No UI, artwork, map, or game-rule changes; do not start Release 1.
-- **Not deployed. No production URL or deployed commit has been verified.**
+- **Assigned URL: https://tacticsim.onrender.com — not yet verified healthy.**
+  The initial deploy failed before application startup; repair/acceptance is in progress.
 - No established host/config was found; GitHub returned no deployments,
   environments, repository secret names, or homepage URL. This does not rule out
   an unidentified host elsewhere.
@@ -27,12 +28,15 @@
 - Current target: the user authorized Prisma Postgres and the other Render
   account, with free resources only. That account was observed in Chrome on its
   first-service creation screen; no service has yet been created there.
-- Prisma's console login was reached. The user explicitly chose to complete
-  account sign-in personally. Do not take over the account authorization step;
-  continue deployment after sign-in is complete and the Free database is available.
-- No TacticSim database/service/credential has been created, no provider database
-  connection has been verified, and no existing data has been deleted. Do not
-  substitute Render's expiring database for the selected Prisma setup.
+- The user completed Prisma sign-in. Free workspace quotas were observed: 200K
+  operations/month, 2 GB storage, $0 invoice. Dedicated project/database `tacticsim`
+  was created in Singapore; pooled/direct credentials were privately configured
+  in the new free Render service. No secret values were committed or printed.
+- Render service `srv-dbjis38ae00c73ec5vl0`, assigned `https://tacticsim.onrender.com`,
+  Free Docker/512 MB, Singapore, source `83406f02bd35345623e094e86da906a1414fff0a`.
+  Initial deploy `dep-dbjis40ae00c73ec61pg` built, then exited 127 before C# startup.
+  Its saved quoted Docker Command was observed; replace it with the default
+  image startup script. Existing local data/backups remain unchanged.
 - Chrome automation initially reported focus-change errors/timeouts; subsequent
   recovery allowed the local browser checks below. Live browser acceptance
   remains unperformed because no TacticSim deployment exists.
@@ -173,11 +177,23 @@ All results below are local/test evidence, not a Render deployment check.
   pointed to an unreachable port, verifying the override without cloud access.
 - [x] Documented pooled runtime/direct migration endpoints, bounded client pools,
   TLS, private secret configuration and unchanged fallback behavior.
-- [ ] User completes Prisma sign-in; identify/create a dedicated Free TacticSim
+- [x] User completes Prisma sign-in; identify/create a dedicated Free TacticSim
   database and app credential, preserving unrelated databases/credentials.
 - [ ] Configure both private Npgsql strings in free Render, deploy verified source,
   and perform the live acceptance checks above. No cloud result is inferred from
   local PostgreSQL tests.
+
+### Hosted startup repair
+
+- [x] Observed successful Render image build and exit 127 on the initial host
+  command before app/migration startup. No working deployment claimed.
+- [x] Added a versioned `Deployment/start-web.sh`, copied into the image and
+  invoked by exec-form CMD. Clear the provider Docker Command override; the
+  script explicitly applies migrations, stops on error, then execs the server.
+- [x] Rebuilt/retested the default image command under 512 MB: bootstrap,
+  migration override, full match (turn 16/six human attacks), all HTTP security,
+  history/resume, container replacement and DB outage/recovery passed locally.
+- [ ] Push, observe CI, redeploy the corrected image, and complete live checks.
 
 - [x] Commit and push verified source to existing `main` without history rewrite,
   using configured user identity and no assistant co-author attribution.

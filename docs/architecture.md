@@ -65,6 +65,14 @@ Action history remains a readable log, not event-sourced state or a replay. Conn
 
 The responsive 8x8 board uses plain CSS/JavaScript. It renders server-provided legal move costs and target IDs. Selection is local presentation state; even clicks on non-highlighted cells are validated by the server and produce readable errors. Controls are disabled while a request is pending. On conflicts the server supplies current state; network retries reuse the pending command. Unit labels, HP, selection details, terrain legend, turn indicator, history, and completion banners are rendered without external assets or client combat rules. Keyboard arrows navigate cells and Escape clears selection.
 
+Release 1 replaces abstract glyphs with an original local SVG sprite. Razor versions
+its URL alongside CSS/JavaScript. The renderer uses only server tile/occupancy data;
+neighboring water cells influence shoreline artwork, never legal actions. Health
+bar widths present server health. Distinct silhouettes, native buttons, accessible
+cell labels, keyboard focus restoration and reduced-motion CSS support different
+input modes. History and help use native disclosure controls. No schema migration
+or server contract change is needed. See [artwork.md](artwork.md).
+
 No frontend framework, Node build pipeline, login, multiplayer, fog of war, external AI API, or replay system is part of the MVP.
 
 ## Release 0 hosting boundary

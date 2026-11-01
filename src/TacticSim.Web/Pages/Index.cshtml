@@ -1,12 +1,13 @@
 @page
 @model IndexModel
+@inject Microsoft.AspNetCore.Mvc.ViewFeatures.IFileVersionProvider FileVersionProvider
 @{
-    ViewData["Title"] = "Command the field";
+    ViewData["Title"] = "Operation Rivergate";
 }
-<div id="game-app" class="game-shell" data-state-url="@Url.Page("/Index", "State")" data-command-url="@Url.Page("/Index", "Command")">
+<div id="game-app" class="game-shell" data-art-url="@FileVersionProvider.AddFileVersionToPath(Request.PathBase, Url.Content("~/art/battlefield.svg"))" data-state-url="@Url.Page("/Index", "State")" data-command-url="@Url.Page("/Index", "Command")">
     @Html.AntiForgeryToken()
     <div class="page-heading">
-        <div><p class="eyebrow">OPERATION 001 / THE CROSSING</p><h1>Command the field<span>.</span></h1><p class="intro">Three units. One battlefield. Make your next move count.</p></div>
+        <div><p class="eyebrow">TACTICSIM / FIELD EDITION</p><h1>Operation Rivergate<span>.</span></h1><p class="intro">Command three miniatures. Read the terrain. Eliminate the opposing squad.</p></div>
         <button id="new-match" class="button secondary" type="button" disabled><span aria-hidden="true">↻</span> New Match</button>
     </div>
     <div id="error" class="error-banner" role="alert" hidden><span id="error-text"></span><button id="retry" type="button">Retry</button></div>
@@ -17,22 +18,23 @@
             <div class="board-frame">
                 <div class="column-labels" aria-hidden="true">@foreach (var letter in "ABCDEFGH") { <span>@letter</span> }</div>
                 <div class="row-labels" aria-hidden="true">@for (var row = 1; row <= 8; row++) { <span>@row</span> }</div>
-                <div id="board" class="board" role="group" aria-label="8 by 8 tactical board" aria-busy="true"></div>
+                <div id="board" class="board" role="group" aria-label="8 by 8 tactical board" aria-busy="true" aria-describedby="board-controls"></div>
             </div>
+            <p id="board-controls" class="board-controls">Select a blue unit, then a marked cell to move or an outlined opponent to attack. Keyboard: arrows to navigate, Enter to choose, Esc to deselect.</p>
             <div class="board-caption"><span><i class="sample move-sample"></i> Legal move <i class="sample attack-sample"></i> Attack target</span><span id="board-hint" role="status">Loading your battlefield…</span></div>
-            <div class="terrain-legend" aria-label="Terrain legend"><span class="legend-title">TERRAIN</span><span><i class="terrain-sample plain"></i> Plain</span><span><i class="terrain-sample forest"></i> Forest <small>+1 defense</small></span><span><i class="terrain-sample hill"></i> Hill <small>+2 defense</small></span><span><i class="terrain-sample water"></i> Water <small>impassable</small></span></div>
+            <div class="terrain-legend" aria-label="Terrain legend"><span class="legend-title">TERRAIN</span><span><i class="terrain-sample plain"></i> Grass <small>plain</small></span><span><i class="terrain-sample forest"></i> Forest <small>+1 defense</small></span><span><i class="terrain-sample hill"></i> Hill <small>+2 defense</small></span><span><i class="terrain-sample water"></i> Water <small>impassable</small></span></div>
         </section>
         <aside class="command-column">
             <section class="panel turn-panel"><p class="eyebrow">COMMAND POST</p><div class="turn-heading"><span class="side-dot human"></span><h2 id="turn-title">Stand by</h2><span id="turn-number" class="number-badge">—</span></div><p id="turn-description">Retrieving your saved match.</p><button id="end-turn" class="button primary" type="button" disabled>End Turn <span aria-hidden="true">→</span></button><p class="micro-note">The opponent plays after you end your turn.</p></section>
-            <section class="panel unit-panel"><div class="section-heading"><h2>Unit intel</h2><span class="eyebrow">SELECT TO INSPECT</span></div><div id="unit-details"><p class="empty-state">Select a blue unit on the board to see its stats and legal actions.</p></div></section>
-            <section class="panel squad-panel"><div class="section-heading"><h2>Your squad</h2><span id="squad-count" class="eyebrow">3 UNITS</span></div><div id="squad"></div></section>
+            <section class="panel unit-panel"><div class="section-heading"><h2>Unit intel</h2><span class="eyebrow">SELECT TO INSPECT</span></div><div id="unit-details"><p class="empty-state">Select a blue unit on the board to see its stats and legal actions.</p></div>
+                <div class="squad-panel" aria-label="Your squad selection"><div class="section-heading"><h2>Your squad</h2><span id="squad-count" class="eyebrow">3 UNITS</span></div><div id="squad"></div></div></section>
         </aside>
     </div>
     <div class="lower-layout">
-        <section class="panel history-panel"><div class="section-heading"><div><p class="eyebrow">FIELD NOTES</p><h2>Action history</h2></div><span id="history-count" class="subtle-badge">0 actions</span></div><ol id="history" class="history-list" aria-label="Action history, newest first"><li class="empty-state">Your actions will appear here.</li></ol></section>
-        <section class="panel briefing-panel"><p class="eyebrow">QUICK BRIEFING</p><h2>A plan beats a lucky shot.</h2><ol class="briefing-list"><li><b>Choose your unit.</b><span>Blue is your squad. Orange is the opponent.</span></li><li><b>Move, then attack.</b><span>One of each per unit. Attacking ends its movement.</span></li><li><b>Use the ground.</b><span>Rough terrain slows you; forests and hills protect you.</span></li></ol><p class="briefing-note">Artillery range: 2–4 cells. Terrain does not block line of sight. No random combat.</p><details><summary>Recent completed matches</summary><ul id="results" class="results-list"><li>No completed matches yet.</li></ul></details></section>
+        <details class="panel history-panel"><summary class="section-heading"><div><p class="eyebrow">FIELD NOTES</p><h2>Action history</h2></div><span id="history-count" class="subtle-badge">0 actions</span></summary><p class="history-note">Accepted actions, newest first. This is a history, not a replay.</p><ol id="history" class="history-list" aria-label="Action history, newest first"><li class="empty-state">Your actions will appear here.</li></ol></details>
+        <details class="panel briefing-panel"><summary>How to play</summary><ol class="briefing-list"><li><b>Choose your unit.</b><span>Blue is your squad. Orange is the opponent.</span></li><li><b>Move, then attack.</b><span>One of each per unit. Attacking ends its movement.</span></li><li><b>Use the ground.</b><span>Rough terrain slows you; forests and hills protect you.</span></li></ol><p class="briefing-note">Artillery range: 2–4 cells. Terrain does not block line of sight. No random combat.</p><details><summary>Recent completed matches</summary><ul id="results" class="results-list"><li>No completed matches yet.</li></ul></details></details>
     </div>
-    <dialog id="new-dialog"><p class="eyebrow">NEW OPERATION</p><h2>Start a fresh match?</h2><p>Your current battlefield will be replaced. Completed results stay in this browser's history.</p><div class="dialog-actions"><button id="cancel-new" class="button secondary" type="button">Keep playing</button><button id="confirm-new" class="button primary" type="button">Start New Match</button></div></dialog>
+    <dialog id="new-dialog"><p class="eyebrow">NEW OPERATION</p><h2>Start a fresh match?</h2><p>Your current match stays saved in Match history. A fresh match will become active.</p><div class="dialog-actions"><button id="cancel-new" class="button secondary" type="button">Keep playing</button><button id="confirm-new" class="button primary" type="button">Start New Match</button></div></dialog>
     <noscript><p class="error-banner">Enable JavaScript to play. The server validates all moves and attacks.</p></noscript>
 </div>
 @section Scripts {

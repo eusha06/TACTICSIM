@@ -1,5 +1,30 @@
 # Verification record
 
+## Release 1 local checks — 2026-11-01
+
+- Release build with warnings as errors: zero warnings/errors.
+- xUnit: 70 engine + 13 real PostgreSQL integration tests passed.
+- EF pending-model check: no migration/model changes.
+- `python3 scripts/verify_web.py http://127.0.0.1:5184` passed the complete
+  human/computer match (computer won on turn 16, six human attacks), all action,
+  history/result/resume, antiforgery, owner-isolation, idempotency, stale and
+  concurrent-command checks.
+- `node --check` accepted plain JavaScript; SVG parsed as XML; diff whitespace clean.
+- Chrome desktop screenshot inspected original artwork and layout. iPhone SE
+  emulation at 375×667 inspected the entire 8×8 board, blue/orange silhouettes,
+  grass/forest/hill terrain and connected water without crossings. A small label
+  overlap was observed and compact label spacing was corrected before deployment.
+- Mobile browser selected Infantry and moved A1→A3; focus returned to the cell,
+  Right moved keyboard focus to B3 and Escape deselected. Armor B1→B4 and
+  Artillery C1→E1, End Turn/computer response, Artillery E1→G1 and attack G5
+  passed. Opponent Armor went 16→11 HP; spent attack and locked movement appeared.
+  Refresh retained state. Action history disclosure showed the five-damage event.
+- Native browser access intermittently timed out or changed active windows;
+  successful observations above were made after raising the dedicated test window.
+
+Live Release 1 deployment and final responsive checks are pending below the
+current checklist, not inferred from these local results.
+
 ## Live Release 0 acceptance — 2026-11-01
 
 Verified https://tacticsim.onrender.com/ on deployed commit

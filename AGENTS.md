@@ -52,7 +52,17 @@
 
 A test, deployment, or browser check is only marked passed after observing its result. Historical results in `docs/verification.md` are evidence for that earlier revision, not a substitute for checking a new release. The Development restart script now targets Release binaries. `scripts/verify_deployment.py` separately checks a Production container through a local TLS edge and replaces that container; neither is proof of a deployed Render service.
 
-## Release 0 deployment direction
+## Release 1 authorization
+
+- Release 1 is authorized: illustrated miniature battlefield with original local
+  SVG terrain and recognizable Infantry, Armor and Artillery, accessible responsive
+  controls and clear action/health feedback. No mission objectives or rule changes.
+- Preserve existing endpoints, save data, map/coordinates, victory, ownership,
+  antiforgery, command receipts and stale rejection. No migration is needed.
+- Reuse the established free Render/Prisma setup; inspect desktop and narrow
+  layouts, verify the deployed revision and existing-save continuity. Stop after Release 1.
+
+## Release 0 deployment direction (historical)
 
 As inspected on 2026-11-01: repository `eusha06/TACTICSIM`, branch `main`, baseline commit `797d3a429bf6453454d562867b1075252ddaedf8`.
 

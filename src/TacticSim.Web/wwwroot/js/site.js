@@ -5,8 +5,34 @@
     const byId = id => document.getElementById(id);
     const board = byId("board");
     const token = app.querySelector('[name="__RequestVerificationToken"]').value;
-    const symbols = { Infantry: "Ⅰ", Armor: "▰", Artillery: "⌁" };
-    const terrainSymbols = { Plain: "", Forest: "♠♠", Hill: "△", Water: "≈" };
+    // Original local SVG symbols are presentation only. The server supplies all terrain,
+    // occupancy, legal actions and health. Neighbor checks below only draw shorelines.
+    const artUrl = app.dataset.artUrl;
+    function illustration(symbol, className) {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("viewBox", "0 0 100 100");
+        svg.setAttribute("class", className);
+        svg.setAttribute("aria-hidden", "true");
+        svg.setAttribute("focusable", "false");
+        const use = document.createElementNS(svg.namespaceURI, "use");
+        use.setAttribute("href", `${artUrl}#${symbol}`);
+        svg.append(use);
+        return svg;
+    }
+    function terrainArt(terrain, x, y) {
+        const art = illustration(terrain.toLowerCase(), "terrain-art");
+        if (terrain === "Water") {
+            for (const [dx, dy, rotation] of [[0, -1, 0], [1, 0, 90], [0, 1, 180], [-1, 0, 270]]) {
+                const nx = x + dx, ny = y + dy;
+                if (nx >= 0 && nx < 8 && ny >= 0 && ny < 8 && state.tiles[ny * 8 + nx] === "Water") continue;
+                const shore = document.createElementNS(art.namespaceURI, "use");
+                shore.setAttribute("href", `${artUrl}#shore`);
+                shore.setAttribute("transform", `rotate(${rotation} 50 50)`);
+                art.append(shore);
+            }
+        }
+        return art;
+    }
     let state = null;
     let selectedId = null;
     let busy = false;
@@ -60,6 +86,9 @@
     }
     async function submit() {
         if (busy || !pending) return;
+        // Disabling cells during a save removes focus. Restore the originating cell
+        // afterwards so keyboard users can continue with arrows/Enter.
+        const commandCell = document.activeElement?.dataset.cell;
         busy = true;
         byId("error").hidden = true;
         render();
@@ -90,6 +119,7 @@
             busy = false;
             render();
         }
+        if (commandCell !== undefined) board.querySelector(`[data-cell="${commandCell}"]`)?.focus({ preventScroll: true });
         if (refresh) await load();
     }
 
@@ -125,16 +155,16 @@
             if (target) label.push("legal attack target");
             cell.setAttribute("aria-label", label.join(", "));
             cell.setAttribute("aria-pressed", String(unit?.id === selectedId));
-            const glyph = element("span", "terrain-glyph", terrainSymbols[terrain]);
-            glyph.setAttribute("aria-hidden", "true");
-            cell.append(glyph);
+            cell.append(terrainArt(terrain, x, y));
             if (unit) {
                 const tokenNode = element("span", `unit-token ${unit.side.toLowerCase()} ${unit.hasAttacked ? "spent" : ""}`);
                 tokenNode.setAttribute("aria-hidden", "true");
-                tokenNode.append(element("span", "unit-symbol", symbols[unit.type]), element("span", "unit-name", unit.type), element("span", "unit-hp", `${unit.health}/${unit.maxHealth}`));
-                const health = element("meter", "");
-                health.min = 0; health.max = unit.maxHealth; health.value = unit.health;
-                tokenNode.append(health);
+                tokenNode.append(illustration(unit.type.toLowerCase(), "unit-art"), element("span", "unit-name", unit.type));
+                const health = element("span", "health-track");
+                const remaining = element("span", "health-fill");
+                remaining.style.width = `${100 * unit.health / unit.maxHealth}%`;
+                health.append(remaining);
+                tokenNode.append(health, element("span", "unit-hp", `${unit.health}/${unit.maxHealth}`));
                 cell.append(tokenNode);
             }
             if (move) cell.append(element("span", "move-cost", move.cost));
@@ -178,7 +208,8 @@
             details.append(element("p", "empty-state", "Select a blue unit on the board to see its stats and legal actions."));
             return;
         }
-        const name = element("div", "intel-name", `${symbols[unit.type]} ${unit.type}`);
+        const name = element("div", `intel-name ${unit.side.toLowerCase()}`);
+        name.append(illustration(unit.type.toLowerCase(), "intel-art"), document.createTextNode(unit.type));
         name.append(element("span", `unit-side ${unit.side.toLowerCase()}`, unit.side === "Human" ? "YOUR UNIT" : "OPPONENT"));
         const stats = element("div", "intel-stats");
         for (const [label, value] of [["HEALTH", `${unit.health}/${unit.maxHealth}`], ["MOVEMENT", unit.movementPoints], ["RANGE", unit.minimumRange === unit.maximumRange ? unit.minimumRange : `${unit.minimumRange}–${unit.maximumRange}`]]) {
@@ -203,7 +234,7 @@
             row.setAttribute("aria-label", `Select your ${unit.type}, ${unit.health} health`);
             const label = element("span", "");
             label.append(element("div", "squad-name", unit.type), element("div", "squad-state", unit.health === 0 ? "Eliminated" : unit.hasAttacked ? "Attack used" : unit.hasMoved ? "Move used" : "Ready for orders"));
-            row.append(element("span", "squad-symbol", symbols[unit.type]), label, element("span", "squad-health", `${unit.health}/${unit.maxHealth}`));
+            row.append(illustration(unit.type.toLowerCase(), "squad-art"), label, element("span", "squad-health", `${unit.health}/${unit.maxHealth}`));
             row.addEventListener("click", () => { selectedId = unit.id; render(); });
             squad.append(row);
         }

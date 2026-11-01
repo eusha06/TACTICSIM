@@ -1,6 +1,24 @@
-# Operation Rivergate — Release 0 checklist
+# Operation Rivergate — release checklist
 
-## Scope and deployment status
+## Release 1 — illustrated battlefield (current)
+
+- Scope: original SVG Infantry/Armor/Artillery and terrain, connected water,
+  dominant responsive battlefield, accessible selection/action/health feedback.
+  No mission objectives, gameplay, endpoint, database or victory changes.
+- Starting commit: `95d4ac7df9d2eb499cb6ed21411be8b6f5ec00a2`; branch `main`.
+- Established target: free Render service `srv-dbjis38ae00c73ec5vl0`,
+  https://tacticsim.onrender.com/, existing free Prisma PostgreSQL and key ring.
+- [x] Inspect instructions, architecture, verification, rendering, handlers and hosting.
+- [x] Implement original local SVG assets and responsive accessible board.
+- [x] Release build, 70 engine/13 PostgreSQL tests, no model drift, full HTTP checks.
+- [x] Inspect desktop and 375×667 layouts, keyboard focus and browser move/attack/turn/refresh/history.
+  Final deployed responsive inspection remains required after the label-spacing correction.
+- [ ] Commit/push, observe CI, deploy exact source, verify live revision and UI.
+- [ ] Verify existing saved-match continuity; record results and stop after Release 1.
+
+## Release 0 — completed
+
+### Scope and deployment status
 
 - Requested release: **reliable deployment of the existing application only**.
 - Date: 2026-11-01 (Asia/Dhaka).

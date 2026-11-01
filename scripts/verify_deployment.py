@@ -148,9 +148,10 @@ def main():
             assert any(name.lower() == "httponly" for name in owner_cookie._rest)
             status, page, headers = browser.request("/")
             assert status == 200
-            assets = [html.unescape(path) for path in re.findall(r'(?:src|href)="([^\"]+\.(?:css|js)(?:\?[^\"]*)?)"', page)
+            assets = [html.unescape(path) for path in re.findall(r'(?:src|href|data-art-url)="([^\"]+\.(?:css|js|svg)(?:\?[^\"]*)?)"', page)
                 if path.startswith("/")]
             assert any("/js/site." in path for path in assets), "Board JavaScript is missing from the page."
+            assert any("/art/battlefield.svg?v=" in path for path in assets), "Versioned battlefield artwork is missing from the page."
             for path in assets:
                 assert browser.request(path)[0] == 200, "Published asset is unavailable: " + path
             # ASP.NET intentionally excludes localhost from HSTS; use a public-host

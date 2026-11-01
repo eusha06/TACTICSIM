@@ -82,8 +82,9 @@ the same. Keys and game tables must be backed up together.
 scheme before redirection/cookie creation. No forwarded host or client identity
 is accepted. `/health` reads required tables and exposes only readiness/revision,
 including 503 during database failure; it creates no owners, keys, or matches.
-Normal startup never applies migrations. The prepared Render pre-deploy command
-applies reviewed migrations after backup gates. No production database files are
+Normal application startup never applies migrations. The free Render Docker
+command explicitly runs `--migrate` and starts the server only after success,
+after the operator's review/backup gates. No production database files are
 stored in the web container. See [deployment.md](deployment.md) for the host's
 trust assumptions, account steps, migration/rollback procedure, and evidence
 limits. The Blueprint is deployment preparation, not evidence of a hosted app.

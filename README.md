@@ -6,7 +6,8 @@ A small fictional turn-based tactical simulation for a C#/.NET portfolio.
 
 **Release 0:** a multi-stage .NET 10 Docker image and Render Blueprint are prepared.
 Production keys persist in PostgreSQL, with a health endpoint and explicit
-migration hook. No live hosting URL has been verified. Follow the
+migration start command for free Render compute. No live hosting URL has been
+verified. Follow the
 [deployment/account setup guide](docs/deployment.md) and
 [current release checklist](docs/release-checklist.md).
 

@@ -1,5 +1,25 @@
 # Verification record
 
+## Free-hosting correction — 2026-11-01
+
+The user requires free hosting; no paid service or upgrade is authorized. The
+existing unrelated Render app was observed on the Free plan. TacticSim's manifest
+now selects free web compute, removes the paid pre-deploy hook, and explicitly
+runs migrations before starting the server. No UI or game-rule code changed.
+
+Release build and all 83 tests passed. The Docker check passed using the exact
+free start command under a 512 MB memory limit, including bootstrap of an empty
+PostgreSQL database, migration reapplication, TLS/cookies/security, a complete
+match (turn 14, seven human attacks), history/resume, container replacement with
+persisted keys/state, and database outage/recovery. All Docker data was disposable.
+
+Live deployment remains pending the PostgreSQL choice. Render's free database
+expires after 30 days and is subsequently deleted; no temporary database has
+been created or represented as permanent storage. The user was asked for an
+existing free PostgreSQL resource or acceptance of that demo limit. Existing
+matches/backups remain intact. Paid proposals below are historical, superseded
+by the free-only instruction. See [the current setup guide](deployment.md).
+
 ## Release 0 — 2026-11-01
 
 Release build/publish passed with zero warnings/errors. All **83 tests** passed

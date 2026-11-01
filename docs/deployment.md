@@ -1,93 +1,104 @@
-# Release 0 deployment
+# Release 0 — free Render deployment
 
-No existing hosting service or production URL was identified. `render.yaml` is a
-prepared deployment definition, not evidence of a live deployment. It uses the
-existing Razor Pages app, .NET 10 Docker runtime, and an explicitly supplied
-PostgreSQL database. It creates no database and changes no game rules.
+The user requires a **free deployment**. The earlier paid proposal was not
+submitted and is superseded. Do not create paid resources, upgrade another app,
+or add a payment method. The existing unrelated application was observed using
+Render's Free compute plan; TacticSim can use that same plan as a separate Docker
+service. No TacticSim deployment URL has yet been assigned or verified.
 
-Follow-up on 2026-11-01: Chrome reached a signed-in Render workspace. The
-inspected project contains an unrelated service and no TacticSim resources.
-Unsubmitted TacticSim creation forms were prepared in Singapore: PostgreSQL 17,
-256 MB compute, 1 GB storage, autoscaling off (**$6.30/month**), and Docker web
-compute, 512 MB (**$7/month**). The observed base total is **$13.30/month**, before
-any usage charges/taxes. Prices must be reviewed again before creation. No
-resource, subscription, payment, production database, or deployment was created.
-Explicit approval of these recurring charges is pending. A draft's name is not
-an assigned URL. The existing local database and its backups remain intact.
+`render.yaml` selects **free** web compute and an explicitly supplied PostgreSQL
+connection. It creates no database. The fixed .NET 10 image, server rules,
+PostgreSQL game state, Data Protection keys and security boundaries are unchanged.
 
-## Render account steps
+## PostgreSQL choice and free limits
 
-1. Sign in to the intended Render workspace. If a TacticSim service already
-   exists, retain its database, hostname, secrets, keys, and service; adapt that
-   service instead of creating a replacement. Record its service ID and URL.
-2. Identify the intended durable PostgreSQL database. For a new installation,
-   provision managed PostgreSQL with backups and a retention plan suitable for
-   saved games; do not rely on an expiring disposable database. Prefer the same
-   Render region/private network as the web service. Existing data must be moved
-   using a verified backup/restore if changing providers, never by starting with
-   an empty replacement. Keep the original database/backups intact. PostgreSQL
-   **17** matches the integration tests; the current creation form defaults to 18,
-   so select 17 explicitly. The prepared database name/user are `tacticsim`.
-3. Use **New Web Service → Public Git Repository** with
-   `https://github.com/eusha06/TACTICSIM.git` when the Git Provider integration
-   does not expose this repository (as observed in the inspected account).
-   This avoids expanding GitHub permissions. Use the settings below, matching
-   `render.yaml`. Alternatively, create a Blueprint from `main` and root
-   `render.yaml` if that repository is already authorized. The configured **paid
-   Starter web service** supports the pre-deploy migration hook. Review current
-   pricing and approve the recurring charges before submitting either creation
-   form. No purchase was performed by this release.
+Prefer an existing suitable free PostgreSQL database, with private credentials
+and sufficient retention for saved matches. Do not borrow credentials or change
+the database used by an unrelated application. Keep the original database and
+backups intact if changing providers; rehearse a full restore instead of silently
+starting an empty replacement for an existing hosted game.
+
+Render's own free PostgreSQL is a **temporary demo option**: it expires after
+30 days, then is deleted after a further 14-day grace period unless upgraded.
+It provides no managed backups. Database deletion would also remove
+`DataProtectionKeys`, making owner cookies unreadable. Use this option only with
+explicit acceptance of its time limit, export private backups before expiry,
+and migrate before expiry if games must remain accessible. A database-retention
+choice was requested; no temporary database has been created yet.
+
+Free Render web services sleep after 15 idle minutes and can take about a minute
+to wake up. Filesystem changes do not survive restarts; keys and matches must
+remain in PostgreSQL. The workspace shares 750 free instance hours per month
+across free services, including the user's existing app. Observe workspace
+bandwidth/build quotas; the free plan is not an unlimited usage commitment.
+Do not enable paid upgrades or add-ons. These limits come from
+[Render's free-instance documentation](https://render.com/docs/free).
+
+## Account steps
+
+1. Use the signed-in Render workspace. Leave the existing unrelated service
+   unchanged. Identify the intended PostgreSQL resource, its retention policy,
+   backup procedure and TLS details. PostgreSQL **17** matches integration tests;
+   select it explicitly if provisioning a new database. For a temporary Render
+   demo, select **Free ($0)**, fixed 1 GB storage, with no paid options. Confirm
+   the displayed expiry date and record it in the release checklist.
+2. Choose **New Web Service → Public Git Repository** and enter
+   `https://github.com/eusha06/TACTICSIM.git`. This works without broadening the
+   existing Git Provider permissions. Alternatively use root `render.yaml` on
+   `main` if the repository is already authorized for Blueprints.
+3. Match the manifest's settings:
 
    | Setting | Value |
    | --- | --- |
-   | Source | Public repository above, branch `main` |
+   | Source / branch | Public repository above / `main` |
    | Language | Docker (automatically detected) |
-   | Region | Singapore, matching the prepared PostgreSQL database |
+   | Compute | **Free — $0**, 512 MB; no disks/add-ons |
+   | Region | Same as PostgreSQL; Singapore for the inspected workspace |
    | Root directory | Empty (repository root) |
-   | Docker build context / Dockerfile | `.` / `./Dockerfile` |
-   | Docker command | Empty; use the image's `CMD` |
+   | Build context / Dockerfile | `.` / `./Dockerfile` |
    | Health check | `/health` |
-   | Pre-deploy command | `dotnet TacticSim.Web.dll --migrate` |
+   | Pre-deploy command | **Empty**; unavailable on Free compute |
    | Auto-deploy | Off; deploy reviewed commits manually |
-4. Set secret **`ConnectionStrings__DefaultConnection`** in Render's environment
-   to an **Npgsql key/value connection string**, not Render's `postgresql://` URL:
+
+   Set **Docker Command** to the following exact command (also in `render.yaml`):
+
+   ```sh
+   /bin/sh -c 'dotnet TacticSim.Web.dll --migrate && exec dotnet TacticSim.Web.dll'
+   ```
+
+   This explicitly applies reviewed migrations before starting the web process.
+   A migration failure prevents startup. A restart reruns the EF migration check,
+   which is a no-op when current; EF's database migration lock coordinates it.
+   Backups/review remain required **before** each new schema deployment. Normal
+   application startup outside this host override does not migrate automatically.
+4. Set **`ConnectionStrings__DefaultConnection`** in Render's secret environment
+   to an **Npgsql key/value string**, not the provider's `postgresql://` URL:
 
    ```text
    Host=<database-host>;Port=5432;Database=<database-name>;Username=<database-user>;Password=<secret>;SSL Mode=VerifyFull;GSS Encryption Mode=Disable
    ```
 
-   Copy individual fields from the database's connection details. Use the TLS
-   policy/certificate chain required by the actual database provider; do not
-   disable certificate verification for an external connection. Password/TLS
-   hosting disables optional Kerberos GSS encryption (the slim runtime has no
-   Kerberos libraries); TLS remains enabled and verified. Keep the value
-   in the provider's secret store, never Git, a Docker build argument, or logs.
-   Restrict database access to the application/operator and migration role.
-5. Set **`AllowedHosts`** to the service's actual assigned hostname (and any
-   intended custom hostname, separated with `;`, without schemes/ports). If the
-   hostname is assigned only after creation, use `*.onrender.com` for the initial
-   Render-domain deployment, then narrow it to the actual assigned hostname
-   before final acceptance. Do not guess a URL. Custom domains need their own
-   explicit entries.
-   Keep `PORT=10000`, `ASPNETCORE_ENVIRONMENT=Production`, and
-   `ReverseProxy__Enabled=true` as defined in the Blueprint. No Docker start
-   override is needed. Root Docker context and `./Dockerfile` are required.
-6. Before initial creation/deployment, perform the backup/migration gates below.
-   Keep automatic deploys off. The pre-deploy command is
-   `dotnet TacticSim.Web.dll --migrate`; health path is `/health`. Deploy the exact
-   pushed commit **after its CI checks pass**, then record the real assigned URL
-   and Render deployment ID/commit. The initial Blueprint creation can start a
-   deploy, so prepare backups/secrets before submitting it.
-7. Compare `GET https://<actual-host>/health`'s `revision` with the full commit in
-   Render's deployment details. Follow the deployed play checklist in
-   `release-checklist.md`, then restart/redeploy the same service and repeat
-   refresh/history/resume with the same browser cookie.
+   Use the actual provider's TLS policy/certificate chain. Do not disable
+   certificate verification for an external connection. Password/TLS hosting
+   disables optional Kerberos GSS encryption; TLS remains enabled and verified.
+   Never commit the connection string or pass it as a Docker build argument.
+5. Add `ASPNETCORE_ENVIRONMENT=Production`, `PORT=10000`, and
+   `ReverseProxy__Enabled=true`. Set `AllowedHosts` to the actual assigned service
+   hostname, without scheme/port. If Render assigns it only after creation,
+   bootstrap using `*.onrender.com`, then narrow to the real hostname before
+   acceptance. Include intended custom domains explicitly; do not guess a URL.
+6. Verify backup/review gates and CI for the exact pushed commit before clicking
+   **Deploy web service**. Confirm the compute price is $0 and no paid extras
+   are selected. The first deployment can begin immediately on creation.
+7. Record the actual service ID, assigned URL, commit and database expiry (if
+   applicable). Compare `/health`'s `revision` with Render's deployment commit.
+   Play the deployed game, verify two-session isolation, then restart/redeploy
+   and resume with the same browser cookie. Keep live checks unchecked until
+   actually observed.
 
-The production connection, backup confirmation, service URL, and resource/billing
-approval are required to finish these steps. Browser account access was recovered
-on follow-up; the intended production resources have not been created and no
-deployment URL has been assigned or verified. The Render plugin is available but
-not installed/connected; it is an alternative to the signed-in browser workflow.
+The pending prerequisite is a usable PostgreSQL target: either an existing free
+database or explicit acceptance of Render's temporary demo database. Browser
+account access is available; no paid-resource approval is being requested.
 
 ## Container and proxy behavior
 
@@ -95,9 +106,10 @@ The multi-stage Dockerfile restores/publishes only Core/Web with the .NET 10 SDK
 then runs the ASP.NET 10 runtime as its non-root `app` user. Its fixed working
 directory is `/app`. No PostgreSQL files, dumps, key files, SDK, or test tooling
 are copied into the runtime image. `.dockerignore` limits the source context.
-The exec-form `CMD` starts `dotnet TacticSim.Web.dll`; the migration hook replaces
-it with the full `dotnet TacticSim.Web.dll --migrate` command. The Docker check
-executes that same command twice, rather than relying on entrypoint arguments.
+The exec-form `CMD` starts `dotnet TacticSim.Web.dll`. Free Render overrides it
+with the migrate-then-start shell command above. The Docker check bootstraps an
+empty database using that exact command under a 512 MB limit, then reapplies the
+migration and replaces the web container to check state/key continuity.
 
 `PORT` binds HTTP on `0.0.0.0` (default image port 8080 if absent); explicit
 `--urls`/`ASPNETCORE_URLS` overrides it. Render supplies 10000. TLS terminates at
@@ -201,19 +213,20 @@ Before each schema deployment:
    legacy snapshots when necessary and leaves its source tables intact. No game
    rows or old backups are deleted by this release. Never use a down migration
    for rollback: its key-table drop would lose ownership keys.
-4. After backup review, let Render's paid pre-deploy hook run the new image's
-   `--migrate`. Failed migrations prevent promotion; inspect the error rather
-   than dropping tables. Re-running an applied migration is a no-op.
+4. After backup review, deploy the new image with the explicit free
+   migrate-then-start command. Failed migrations prevent startup; inspect the
+   error rather than dropping tables. Re-running an applied migration is a no-op.
+   Do not put database credentials in the image or run migrations during build.
 5. Verify health, saved-match counts and old cookies, then allow traffic. This
    additive schema permits rolling the **application image** back while keeping
    the schema/keys. An old binary that uses filesystem keys still needs its old
    ring/discriminator; keep both backups. Any database restore requires a
    separate, deliberate recovery plan and write freeze, never automatic cleanup.
 
-For a free Render web service without a pre-deploy hook, an operator must apply
-the reviewed migration using the new published `--migrate` command from a trusted
-machine with access to the database **before** deploying. This fallback is not
-the supplied paid Blueprint; do not silently skip migrations.
+An operator with database access can alternatively apply the published
+`--migrate` command before deployment, then use the default server-only Docker
+command. Free compute has no provider shell or one-off jobs; do not rely on those
+paid features to prepare its schema. No paid plan is required by this repository.
 
 ## Reproducible checks
 

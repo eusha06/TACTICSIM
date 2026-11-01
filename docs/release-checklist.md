@@ -20,11 +20,16 @@
   has one unrelated Node service and no TacticSim service/database. The Render
   CLI is absent and its plugin is not installed/connected; neither prevents
   using the signed-in browser when resource creation is approved.
-- Current deployment blocker: TacticSim production resources are unprovisioned.
-  Prepared, unsubmitted forms quote web compute $7/month and PostgreSQL 17,
-  256 MB/1 GB storage $6.30/month ($13.30/month base plus usage/taxes).
-  Explicit recurring-spend approval was requested and has not been received.
-  No resource, purchase, production database, or hosting service was created.
+- The user subsequently specified **free hosting only**. The paid proposal is
+  withdrawn; no paid resource, upgrade or payment method is authorized.
+- The existing unrelated service was directly observed on Render's **Free**
+  compute plan. It remains unchanged. `render.yaml` now also selects `plan: free`.
+- Current deployment blocker: a PostgreSQL target/retention choice is needed.
+  Prefer an existing suitable free PostgreSQL database. Render free PostgreSQL
+  expires after 30 days and is later deleted, including game state and cookie
+  keys; a temporary demo requires explicit acceptance of that limit. The user
+  was asked for an existing resource or acceptance of the temporary demo.
+  No TacticSim database/service has been created, and no existing data deleted.
 - Chrome automation initially reported focus-change errors/timeouts; subsequent
   recovery allowed the local browser checks below. Live browser acceptance
   remains unperformed because no TacticSim deployment exists.
@@ -50,8 +55,8 @@
   changes or deleted legacy backups. Explicit migration hook, never EnsureCreated.
 - [x] One-time additive/idempotent old key-ring import command and discriminator
   compatibility documentation/test; no keys deleted/replaced.
-- [x] Document backup/restore gates, paid Render pre-deploy command, free-service
-  operator alternative, image rollback, and retained-key requirements.
+- [x] Document backup/restore gates, the free Render migrate-then-start command,
+  image rollback, retained-key requirements, sleep/usage limits and DB expiry.
 - [x] Preserve C# authority, session ownership, antiforgery, accepted-command
   atomicity, idempotency, concurrency and stale-command rejection.
 
@@ -133,6 +138,22 @@ All results below are local/test evidence, not a Render deployment check.
 
 ## Publishing and live acceptance
 
+### Free-hosting correction
+
+- [x] Changed only hosting configuration/verification/docs: free web compute,
+  no paid pre-deploy hook, explicit migrate-then-start Docker command. Server
+  rules, UI, ownership, antiforgery and command semantics are unchanged.
+- [x] Release build passed with zero warnings/errors; all 83 tests passed.
+- [x] Production image + exact free start command passed under a **512 MB**
+  container limit. It bootstrapped an empty PostgreSQL schema before readiness,
+  safely reapplied migrations, completed a match (turn 14, seven human attacks),
+  verified TLS/cookies/CSRF/two-owner isolation/history/resume, replaced the
+  container retaining state/keys, and checked database outage/recovery.
+- [ ] Identify the existing free PostgreSQL target, or receive explicit
+  acceptance of Render's temporary free database and record its expiry.
+- [ ] Deploy the free service and verify the real assigned URL/commit, play flow,
+  two-browser ownership isolation, and resume after redeployment.
+
 - [x] Commit and push verified source to existing `main` without history rewrite,
   using configured user identity and no assistant co-author attribution.
   Implementation: `4c2e3779c388387bcc3ec56971404628f89e10cf` (following initial
@@ -158,7 +179,7 @@ Blocked checks remain unchecked. CI is build/test evidence, not deployment.
 
 ## Short manual play/deploy checklist
 
-1. Complete [Render account setup](deployment.md), including database backup,
+1. Complete [free Render account setup](deployment.md), including database backup,
    secret Npgsql connection, actual AllowedHosts, migration hook and managed ingress.
 2. Deploy the exact verified `main` commit. Record the actual URL/ID and confirm
    `/health` reports healthy and its revision equals that commit.

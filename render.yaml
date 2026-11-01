@@ -4,13 +4,15 @@ services:
   - type: web
     name: tacticsim
     runtime: docker
-    plan: starter
+    plan: free
     branch: main
     dockerfilePath: ./Dockerfile
     dockerContext: .
     # Deploy manually after CI and backup review, never on an unchecked push.
     autoDeployTrigger: "off"
-    preDeployCommand: dotnet TacticSim.Web.dll --migrate
+    # Free compute has no pre-deploy hook or shell. Apply reviewed migrations
+    # before serving; a failed migration prevents the web process from starting.
+    dockerCommand: /bin/sh -c 'dotnet TacticSim.Web.dll --migrate && exec dotnet TacticSim.Web.dll'
     healthCheckPath: /health
     envVars:
       - key: ASPNETCORE_ENVIRONMENT

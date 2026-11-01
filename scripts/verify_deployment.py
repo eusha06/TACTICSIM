@@ -65,9 +65,10 @@ def main():
             connection.close()
 
     def start_application():
-        docker("run", "-d", "--name", application, "--network", prefix,
+        docker("run", "-d", "--name", application, "--network", prefix, "--memory", "512m",
             "-p", "127.0.0.1::10000", "-e", "PORT=10000", "-e", "ReverseProxy__Enabled=true",
             "-e", "AllowedHosts=localhost;127.0.0.1;play.example.test", "-e", "ConnectionStrings__DefaultConnection", image,
+            "/bin/sh", "-c", "dotnet TacticSim.Web.dll --migrate && exec dotnet TacticSim.Web.dll",
             env=environment)
         backend[0] = int(docker("port", application, "10000/tcp").rsplit(":", 1)[1])
         wait_for(lambda: ready()[0] == 200, "production readiness")
@@ -110,12 +111,12 @@ def main():
             "-e", "POSTGRES_DB=tacticsim_verify", "-e", "POSTGRES_PASSWORD", "postgres:17", env=environment)
         wait_for(lambda: docker("exec", database, "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", "tacticsim_verify",
             stderr=subprocess.DEVNULL).endswith("accepting connections"), "isolated PostgreSQL")
-        docker("run", "--rm", "--network", prefix, "-e", "ConnectionStrings__DefaultConnection", image,
-            "dotnet", "TacticSim.Web.dll", "--migrate", env=environment)
-        # Reapplying must be safe and leave the existing migration/import backups alone.
-        docker("run", "--rm", "--network", prefix, "-e", "ConnectionStrings__DefaultConnection", image,
-            "dotnet", "TacticSim.Web.dll", "--migrate", env=environment)
+        # The exact free Render command must bootstrap a completely empty DB.
         start_application()
+        # Reapplying must be safe and leave existing state/import backups alone.
+        docker("run", "--rm", "--network", prefix, "-e", "ConnectionStrings__DefaultConnection", image,
+            "dotnet", "TacticSim.Web.dll", "--migrate", env=environment)
+        print("PASS: free Render start command migrates an empty database before readiness; reapplication is safe")
         connection = http.client.HTTPConnection("127.0.0.1", backend[0])
         connection.request("GET", "/")
         response = connection.getresponse()

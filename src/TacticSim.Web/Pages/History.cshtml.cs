@@ -52,7 +52,7 @@ public class HistoryModel(BrowserOwner owner, MatchService matches, ILogger<Hist
             if (!ModelState.IsValid) return BadRequest();
             var reply = await matches.Execute(id.Value, new MatchCommand(CommandId, ExpectedVersion, "resume",
                 MatchId: CurrentMatchId, ExpectedMatchVersion: ExpectedMatchVersion, TargetMatchId: TargetMatchId), ct);
-            if (reply.Status == 200) return RedirectToPage("/Index");
+            if (reply.Status == 200) return RedirectToPage("/Index", new { play = 1 });
             if (reply.Status == 404) return NotFound();
             ErrorMessage = reply.Error;
             Response.StatusCode = reply.Status;

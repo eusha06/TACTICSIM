@@ -50,6 +50,8 @@ jobs:
         run: dotnet build TacticSim.sln --configuration Release --no-restore --warnaserror
       - name: Run engine and PostgreSQL tests
         run: dotnet test TacticSim.sln --configuration Release --no-build --no-restore --nologo
+      - name: Verify tutorial transitions (no npm or frontend build)
+        run: node --test scripts/tutorial.test.cjs
       - name: Verify and apply migrations
         run: |
           dotnet tool restore --tool-manifest dotnet-tools.json

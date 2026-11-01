@@ -38,6 +38,37 @@
     let busy = false;
     let pending = null; // Kept after a network failure, so Retry uses the SAME command ID.
     let retryAction = load;
+    let loaded = false;
+    let playing = false;
+    let continueMatch = null;
+    let tutorial = null;
+    // UI preferences only. Cookies/PostgreSQL remain the authority for match ownership/state.
+    function preference(storage, key, value) {
+        try {
+            if (value === undefined) return window[storage].getItem(key);
+            if (value === null) window[storage].removeItem(key);
+            else window[storage].setItem(key, value);
+        } catch { /* Storage may be disabled; gameplay still works. */ }
+        return null;
+    }
+    let rememberedMatch = preference("sessionStorage", "tacticsim.playing");
+    const explicitPlay = new URLSearchParams(location.search).get("play") === "1";
+    let wantPlay = explicitPlay || !!rememberedMatch;
+    function saveTutorial() {
+        if (tutorial) preference("localStorage", `tacticsim.tutorial.${tutorial.matchId}`, JSON.stringify(tutorial.snapshot()));
+    }
+    function enterPlay() {
+        if (!state) return;
+        playing = true; wantPlay = true;
+        rememberedMatch = state.matchId;
+        preference("sessionStorage", "tacticsim.playing", state.matchId);
+        render();
+        byId("play-title").focus();
+    }
+    function selectLessonUnit(unit) {
+        tutorial?.select(unit);
+        saveTutorial();
+    }
 
     function element(tag, className, text) {
         const node = document.createElement(tag);
@@ -53,6 +84,12 @@
     function accept(next) {
         if (!next || (state && next.version < state.version)) return;
         state = next;
+        if (!tutorial || tutorial.matchId !== state.matchId) {
+            let saved = null;
+            try { saved = JSON.parse(preference("localStorage", `tacticsim.tutorial.${state.matchId}`)); } catch { /* Start fresh. */ }
+            tutorial = new Tutorial(state.matchId, saved, preference("localStorage", "tacticsim.tutorial.dismissed") === "1");
+        }
+        if (!state.winner) continueMatch = { matchId: state.matchId, turnNumber: state.turnNumber };
         if (!state.units.some(u => u.id === selectedId && u.health > 0)) selectedId = null;
     }
     async function load() {
@@ -70,13 +107,19 @@
             }
             if (!response.ok) throw new Error(data.error || "Could not retrieve the battlefield.");
             accept(data.state);
+            continueMatch = data.continueMatch ?? null;
+            loaded = true;
         } catch (failure) {
             error(failure.message || "Connection lost. Retry to retrieve your saved match.");
         } finally {
             busy = false;
             render();
         }
-        if (!state && byId("error").hidden) await command("new");
+        // Visiting/refreshing never sends New Match. Begin is an explicit user action.
+        if (wantPlay && state && (explicitPlay || !rememberedMatch || rememberedMatch === state.matchId)) {
+            playing = true;
+            render();
+        }
     }
     async function command(kind, fields = {}) {
         if (busy || pending) return;
@@ -110,7 +153,13 @@
                 return;
             }
             refresh = !!data.state && !!state && data.state.version < state.version;
+            const acceptedCommand = pending;
             accept(data.state);
+            if (response.ok && !refresh) {
+                tutorial?.accepted(acceptedCommand, data.state);
+                saveTutorial();
+                if (acceptedCommand.kind === "new" || acceptedCommand.kind === "resume") enterPlay();
+            }
             pending = null;
             if (!response.ok) error(data.error || "That action could not be completed.", response.status === 401 ? () => location.reload() : load);
         } catch {
@@ -125,7 +174,19 @@
 
     function render() {
         const locked = busy || !!pending;
-        byId("new-match").disabled = locked;
+        byId("welcome").hidden = playing;
+        byId("play-area").hidden = !playing;
+        byId("begin-operation").disabled = locked || !loaded;
+        byId("begin-operation").classList.toggle("secondary", !!continueMatch);
+        byId("continue-operation").hidden = !continueMatch;
+        byId("continue-operation").disabled = locked || !loaded;
+        byId("continue-operation").textContent = continueMatch ? `Continue Operation · Turn ${continueMatch.turnNumber}` : "Continue Operation";
+        byId("welcome-status").textContent = busy ? "Retrieving your operation…" : !loaded ? "Connect to check your saved operation." :
+            continueMatch ? "An unfinished operation is ready. Begin starts a separate match; your saves stay in Match history." :
+            state?.winner ? "Your last operation is complete. Begin again or review your saved matches." : "Ready when you are. Begin Operation starts your first match.";
+        byId("replay-tutorial").disabled = locked || !state;
+        byId("replay-note").textContent = state ? "Replay changes guidance only; your match and remaining actions stay as they are." : "Begin or continue an operation to practice without resetting it.";
+        byId("new-match").disabled = locked || !state;
         byId("end-turn").disabled = locked || !state || !!state.winner || state.currentSide !== "Human";
         board.setAttribute("aria-busy", String(busy));
         if (!state) return;
@@ -146,6 +207,7 @@
             cell.type = "button";
             cell.dataset.cell = String(index);
             cell.disabled = locked;
+            if (unit) cell.classList.add(unit.side === "Human" ? "friendly-unit" : "opposing-unit");
             if (move) cell.classList.add("legal-move");
             if (target) cell.classList.add("attack-target");
             if (unit?.id === selectedId) cell.classList.add(unit.side === "Human" ? "selected" : "inspecting");
@@ -185,6 +247,30 @@
         renderDetails(selected);
         renderSquad();
         renderHistory();
+        renderTutorial(selected, locked);
+    }
+    function renderTutorial(selected, locked) {
+        const active = playing && tutorial && tutorial.step < 3;
+        byId("tutorial").hidden = !active;
+        board.classList.toggle("tutorial-select", !!active && tutorial.step === 0 && !state.winner);
+        if (!active) return;
+        const step = tutorial.step;
+        const titles = ["Select a friendly unit", "Choose a highlighted legal destination", "Attack targets and End Turn"];
+        let message = "Blue units are yours. Choose a miniature or a unit in Your squad to inspect its remaining actions.";
+        if (step === 1) {
+            message = !selected || selected.side !== "Human" ? "Select a friendly unit to see its legal destinations." :
+                selected.hasAttacked ? "Already attacked this turn. Choose another friendly unit or End Turn to restore actions." :
+                selected.hasMoved ? "Already moved this turn. Choose another friendly unit or End Turn to restore actions." :
+                !selected.legalMoves.length ? "No legal destination for this unit. Choose another friendly unit, or End Turn." :
+                "Choose a round move marker. Its number is the route cost. A successful move advances this step.";
+        }
+        if (step === 2) message = "Attack a dashed orange target once. Attacking locks movement. End Turn lets the opponent respond; your actions reset next turn. How to Play stays available.";
+        if (state.winner) message = "This operation is complete. Begin a new one from Briefing when you want to practice. Replay never resets a match.";
+        for (const [id, text] of [["tutorial-step", `FIRST ORDERS · ${step + 1} OF 3`], ["tutorial-title", titles[step]], ["tutorial-message", message]]) {
+            if (byId(id).textContent !== text) byId(id).textContent = text;
+        }
+        byId("tutorial-done").hidden = step !== 2;
+        byId("tutorial-done").disabled = locked;
     }
     function choose(x, y, unit) {
         if (busy || pending) return;
@@ -193,6 +279,7 @@
             command("attack", { unitId: selected.id, targetId: unit.id });
         } else if (unit) {
             selectedId = selectedId === unit.id ? null : unit.id;
+            if (selectedId !== null) selectLessonUnit(unit);
             render();
         } else if (!state.winner && selected?.side === "Human") {
             command("move", { unitId: selected.id, x, y });
@@ -235,7 +322,7 @@
             const label = element("span", "");
             label.append(element("div", "squad-name", unit.type), element("div", "squad-state", unit.health === 0 ? "Eliminated" : unit.hasAttacked ? "Attack used" : unit.hasMoved ? "Move used" : "Ready for orders"));
             row.append(illustration(unit.type.toLowerCase(), "squad-art"), label, element("span", "squad-health", `${unit.health}/${unit.maxHealth}`));
-            row.addEventListener("click", () => { selectedId = unit.id; render(); });
+            row.addEventListener("click", () => { selectedId = unit.id; selectLessonUnit(unit); render(); });
             squad.append(row);
         }
     }
@@ -253,6 +340,32 @@
         if (!state.results.length) results.append(element("li", "", "No completed matches yet."));
     }
 
+    byId("begin-operation").addEventListener("click", () => command("new"));
+    byId("continue-operation").addEventListener("click", async () => {
+        await load();
+        if (busy || pending || !continueMatch || !byId("error").hidden) return;
+        if (state?.matchId === continueMatch.matchId && !state.winner) enterPlay();
+        else await command("resume", { targetMatchId: continueMatch.matchId });
+    });
+    byId("show-briefing").addEventListener("click", () => {
+        playing = false; wantPlay = false; rememberedMatch = null;
+        preference("sessionStorage", "tacticsim.playing", null);
+        render(); byId("welcome-title").focus(); load();
+    });
+    for (const button of document.querySelectorAll(".help-open")) button.addEventListener("click", () => byId("help-dialog").showModal());
+    byId("close-help").addEventListener("click", () => byId("help-dialog").close());
+    byId("replay-tutorial").addEventListener("click", () => {
+        if (!state || busy || pending) return;
+        byId("help-dialog").close();
+        tutorial.replay(); selectedId = null; saveTutorial(); enterPlay();
+    });
+    function dismissTutorial() {
+        tutorial.skip(); saveTutorial();
+        preference("localStorage", "tacticsim.tutorial.dismissed", "1");
+        render(); byId("play-title").focus();
+    }
+    byId("tutorial-skip").addEventListener("click", dismissTutorial);
+    byId("tutorial-done").addEventListener("click", () => { if (tutorial.step === 2) dismissTutorial(); });
     byId("end-turn").addEventListener("click", () => command("endTurn"));
     byId("new-match").addEventListener("click", () => state ? byId("new-dialog").showModal() : command("new"));
     byId("cancel-new").addEventListener("click", () => byId("new-dialog").close());

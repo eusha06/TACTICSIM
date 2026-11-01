@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using TacticSim.Web.Services;
+using TacticSim.Core;
 
 namespace TacticSim.Web.Pages;
 
@@ -11,8 +12,31 @@ public class IndexModel(BrowserOwner owner, MatchService matches, ILogger<IndexM
 {
     public void OnGet() => owner.EnsureCookie(HttpContext);
 
+    public IReadOnlyList<Unit> GuideUnits { get; } = Game.CreateDefault().Units.Where(u => u.Side == Side.Human).ToArray();
+    public Terrain[] GuideTerrains { get; } = Enum.GetValues<Terrain>();
+    public int Defense(Terrain terrain)
+    {
+        var map = BattleMap.Default;
+        var position = Enumerable.Range(0, BattleMap.Size * BattleMap.Size)
+            .Select(i => new Position(i % BattleMap.Size, i / BattleMap.Size))
+            .First(p => map.GetTerrain(p) == terrain);
+        return map.GetDefense(position);
+    }
+
+    public sealed record ContinueView(Guid MatchId, int TurnNumber);
+
     public Task<IActionResult> OnGetStateAsync(CancellationToken ct) => WithOwner(async id =>
-        new JsonResult(new { state = await matches.Read(id, ct) }));
+    {
+        var state = await matches.Read(id, ct);
+        ContinueView? candidate = state is { Winner: null }
+            ? new(state.MatchId, state.TurnNumber) : null;
+        if (candidate is null)
+        {
+            var unfinished = (await matches.History(id, ct)).FirstOrDefault(m => m.Winner is null);
+            if (unfinished is not null) candidate = new(unfinished.MatchId, unfinished.TurnNumber);
+        }
+        return new JsonResult(new { state, continueMatch = candidate });
+    });
 
     // Razor Pages automatically validates antiforgery on POST handlers.
     public Task<IActionResult> OnPostCommandAsync([FromBody] MatchCommand? command, CancellationToken ct) =>

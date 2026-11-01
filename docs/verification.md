@@ -1,5 +1,30 @@
 # Verification record
 
+## Release 2 local acceptance
+
+- Release build passed with warnings as errors; 70 engine and 14 PostgreSQL
+  tests passed. New integration test checks server-generated too-close/too-far
+  range explanations and unchanged state/receipts after rejection.
+- Eight plain-JavaScript tutorial tests passed using Node's built-in test runner,
+  without npm packages or a frontend build: friendly selection, matching accepted
+  moves, retries, unrelated/old state, per-match refresh, Skip and Replay.
+- EF reports no model changes. Core, schema, keys and game rules are unchanged.
+- Full local HTTP suite passed, including first-visit read-only briefing/help/history,
+  owned Continue fallback to an older unfinished save after active completion,
+  complete match (turn 10, six attacks), CSRF/isolation/concurrency/idempotency,
+  stale commands, history/results and Resume.
+- Desktop Chrome first visit showed no board/match until explicit Begin. Opening
+  help and then History still showed no saved matches. Begin started the normal
+  operation. Opponent selection did not advance step one; water rejection did
+  not advance step two; an accepted Infantry A1→A3 move reached step three.
+- Got it, Replay on already-moved Infantry, a rejected second move, Skip,
+  refresh and Continue all retained the same state. Skip stayed dismissed;
+  Replay used actual remaining actions. End Turn did not pretend to be a move;
+  a subsequent legal A3→A4 move completed that step.
+- 344×656 Chrome mobile emulation inspected welcome and scrollable help. Action
+  buttons were moved above secondary notes after inspecting excessive scrolling.
+  No physical mobile device was tested. Live deployment checks are pending.
+
 ## Live Release 1 acceptance — 2026-11-01
 
 https://tacticsim.onrender.com/ is serving

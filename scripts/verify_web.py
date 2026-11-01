@@ -76,6 +76,13 @@ def parallel_posts(browser, payloads):
 def main():
     a, b = Browser(), Browser()
     assert a.state() is None and b.state() is None
+    status, briefing, _ = a.request("/")
+    assert status == 200 and 'id="welcome"' in briefing and 'Begin Operation' in briefing
+    assert 'defeat the opposing squad' in briefing.lower() and 'id="help-dialog"' in briefing
+    assert 'range 2–4 cells' in briefing and 'Terrain does not block line of sight' in briefing
+    assert a.state() is None and a.request("/?handler=State")[1]["continueMatch"] is None
+    assert a.request("/History")[0] == 200 and a.state() is None
+    print("PASS: briefing/help/history reads leave first-visit match state empty")
     new = command_payload(None, "new")
     assert a.request("/?handler=Command", new, csrf=False)[0] == 400
     valid_token = a.token
@@ -128,6 +135,11 @@ def main():
     assert a.state() == before
     print("PASS: invalid action does not mutate state; reload resumes the current match")
 
+    # Retain an unfinished operation, then finish a separate one. Continue must
+    # find the owned older save even when the active operation is completed.
+    parked = state
+    state = a.command(state, "new")
+    assert a.request("/?handler=State")[1]["continueMatch"]["matchId"] == state["matchId"]
     # Choose human intents ONLY from the authoritative server-provided action lists.
     # This test strategy has no damage, terrain, or legal-movement implementation.
     attacks = 0
@@ -159,6 +171,10 @@ def main():
     assert a.request("/?handler=Command", command_payload(state, "endTurn"))[0] == 422
     assert a.state() == state
     finished = state
+    assert a.request("/?handler=State")[1]["continueMatch"]["matchId"] == parked["matchId"]
+    assert b.request("/?handler=State")[1]["continueMatch"]["matchId"] == other["matchId"]
+    assert a.state() == finished
+    print("PASS: Continue candidate is owned/read-only and finds an older unfinished match after completion")
     state = a.command(state, "new")
     assert state["matchId"] != finished["matchId"] and state["version"] == finished["version"] + 1
     assert state["results"] == finished["results"]

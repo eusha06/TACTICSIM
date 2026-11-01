@@ -27,7 +27,7 @@ The xUnit suite covers legal and illegal actions, terrain routes, occupied cells
 
 The browser sends intent: a unit ID, destination or target, command ID, and expected match version. Selection is local UI state. The server returns authoritative state and legal choices for highlighting; the browser never computes legal movement or damage.
 
-`IndexModel` exposes `GET /?handler=State` and `POST /?handler=Command`. The page itself establishes the anonymous owner cookie and renders an antiforgery token. State GETs do not create or mutate matches. JavaScript starts a missing match with a POST. All state responses are private/no-store.
+`IndexModel` exposes `GET /?handler=State` and `POST /?handler=Command`. The page itself establishes the anonymous owner cookie and renders an antiforgery token. State GETs do not create or mutate matches. Only the explicit Begin Operation or confirmed New Match control starts a match with a protected POST. Opening or refreshing the page never starts one. The state read also returns an owned unfinished Continue candidate: active unfinished first, otherwise the most recent unfinished match. Continue opens the active save without a write, or uses the same protected Resume command for an older one. All state responses are private/no-store.
 
 For each command:
 
@@ -74,6 +74,32 @@ input modes. History and help use native disclosure controls. No schema migratio
 or server contract change is needed. See [artwork.md](artwork.md).
 
 No frontend framework, Node build pipeline, login, multiplayer, fog of war, external AI API, or replay system is part of the MVP.
+
+## Release 2 briefing and tutorial
+
+The initial view is a briefing. A tab remembers only which match it was viewing
+in sessionStorage, so refresh can restore the board without sending a command.
+History's successful Resume redirects with `play=1`, a presentation hint that
+opens the server-owned current state. It cannot select or grant access to a match.
+How to Play is a native dialog available before and during play. Razor derives
+unit health/budgets/ranges, per-terrain movement costs and defense from Core.
+Contextual range errors are formatted in Web only after the engine rejects an
+attack; JavaScript never computes legality or distance to produce those errors.
+
+The small `Tutorial` class tracks selection → successful move → explanation.
+Only a living friendly selection advances step one. Only a successful matching
+server response for the armed unit/match/destination advances step two. Rejected
+commands, old spent flags, selection changes and timers cannot stand in for a
+move. Identical retry receipts advance at most once. The final explanation is
+acknowledged with Got it. The tutorial never gates gameplay controls.
+
+localStorage holds optional per-match tutorial progress and dismissal preferences,
+not game state or ownership. Storage failures affect guidance persistence only.
+Skip and Replay have no network writes and never change command IDs, pending
+retries, units or saves. Replay on a spent unit explains its actual server flags
+and leaves End Turn available. `scripts/tutorial.test.cjs` runs using Node's
+built-in test runner without npm or a frontend build; HTTP tests cover read-only
+briefing/Continue discovery and the unchanged command/security boundary.
 
 ## Release 0 hosting boundary
 

@@ -117,7 +117,7 @@ public sealed class MatchService(MatchDbContext db)
                 _ => (ActionResult?)null
             };
             if (result is null) return new(400, await View(session!.Revision, match, ct), "Unknown command or missing action fields.");
-            if (!result.Value.IsSuccess) return new(422, await View(session!.Revision, match, ct), Explain(result.Value.Error));
+            if (!result.Value.IsSuccess) return new(422, await View(session!.Revision, match, ct), Explain(result.Value.Error, game, command));
             if (command.Kind == "endTurn" && game.Winner is null)
             {
                 var computer = new ComputerOpponent().PlayTurn(game);
@@ -254,22 +254,34 @@ public sealed class MatchService(MatchDbContext db)
         };
     }
 
-    private static string Explain(GameError error) => error switch
+    private static string Explain(GameError error, Game game, MatchCommand command)
     {
-        GameError.GameOver => "This match is complete. Start a new match to play again.",
-        GameError.NotYourTurn => "It is not your turn. Refresh the board.",
-        GameError.NotYourUnit => "You can only command your blue units.",
-        GameError.UnitNotFound or GameError.TargetNotFound => "That unit does not exist.",
-        GameError.UnitDestroyed or GameError.TargetDestroyed => "That unit has been destroyed.",
-        GameError.AlreadyMoved => "This unit already moved this turn.",
-        GameError.AlreadyAttacked => "This unit already attacked this turn.",
-        GameError.MoveAfterAttack => "A unit cannot move after attacking.",
-        GameError.OutOfBounds => "Choose a cell inside the board.",
-        GameError.ImpassableTerrain => "Water is impassable.",
-        GameError.DestinationOccupied => "A living unit occupies that cell.",
-        GameError.Unreachable => "That cell cannot be reached within this unit's movement budget.",
-        GameError.FriendlyFire => "Choose an orange opponent as your attack target.",
-        GameError.OutOfRange => "That target is outside this unit's attack range.",
-        _ => "That action could not be completed."
-    };
+        // The engine already rejected this attack. Add context here, never in JS.
+        if (error == GameError.OutOfRange)
+        {
+            var attacker = game.Units.Single(u => u.Id == command.UnitId);
+            var target = game.Units.Single(u => u.Id == command.TargetId);
+            if (attacker.Position.ManhattanDistanceTo(target.Position) < attacker.MinimumRange)
+                return $"Target is too close for {attacker.GetType().Name.ToLowerInvariant()}. Minimum range: {attacker.MinimumRange} cells.";
+            return $"Target is too far away. {attacker.GetType().Name} range: {attacker.MinimumRange}–{attacker.MaximumRange} cells.";
+        }
+        return error switch
+        {
+            GameError.GameOver => "This match is complete. Start a new match to play again.",
+            GameError.NotYourTurn => "It is not your turn. Refresh the board.",
+            GameError.NotYourUnit => "You can only command your blue units.",
+            GameError.UnitNotFound or GameError.TargetNotFound => "That unit does not exist.",
+            GameError.UnitDestroyed or GameError.TargetDestroyed => "That unit has been destroyed.",
+            GameError.AlreadyMoved => "This unit already moved this turn.",
+            GameError.AlreadyAttacked => "This unit already attacked this turn.",
+            GameError.MoveAfterAttack => "A unit cannot move after attacking.",
+            GameError.OutOfBounds => "Choose a cell inside the board.",
+            GameError.ImpassableTerrain => "Water is impassable.",
+            GameError.DestinationOccupied => "A living unit occupies that cell.",
+            GameError.Unreachable => "That cell cannot be reached within this unit's movement budget.",
+            GameError.FriendlyFire => "Choose an orange opponent as your attack target.",
+            GameError.OutOfRange => "That target is outside this unit's attack range.",
+            _ => "That action could not be completed."
+        };
+    }
 }

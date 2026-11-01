@@ -151,6 +151,7 @@ def main():
             assets = [html.unescape(path) for path in re.findall(r'(?:src|href|data-art-url)="([^\"]+\.(?:css|js|svg)(?:\?[^\"]*)?)"', page)
                 if path.startswith("/")]
             assert any("/js/site." in path for path in assets), "Board JavaScript is missing from the page."
+            assert any("/js/tutorial." in path for path in assets), "Tutorial JavaScript is missing from the page."
             assert any("/art/battlefield.svg?v=" in path for path in assets), "Versioned battlefield artwork is missing from the page."
             for path in assets:
                 assert browser.request(path)[0] == 200, "Published asset is unavailable: " + path

@@ -52,7 +52,19 @@
 
 A test, deployment, or browser check is only marked passed after observing its result. Historical results in `docs/verification.md` are evidence for that earlier revision, not a substitute for checking a new release. The Development restart script now targets Release binaries. `scripts/verify_deployment.py` separately checks a Production container through a local TLS edge and replaces that container; neither is proof of a deployed Render service.
 
-## Release 1 authorization
+## Release 2 authorization
+
+- Release 2 is authorized: focused briefing, Begin/Continue, reusable help and an
+  action-driven first interaction tutorial. Preserve rules; no capture objectives.
+- Page loads/read handlers must never start matches. Begin and any older-match
+  Continue must use the existing protected/versioned/idempotent command flow.
+- Tutorial selection is presentation state; movement advances only on a successful
+  server response for that unit/match/destination. Skip/replay never resets games,
+  spends actions, changes pending commands or bypasses keyboard access.
+- Derive numeric help from Core and contextual rejections on the server. Preserve
+  saves, cookie keys, schema and security; reuse free Render/Prisma. Stop after Release 2.
+
+## Release 1 authorization (completed)
 
 - Release 1 was completed and verified at `https://tacticsim.onrender.com` on
   2026-11-01, deployed source `b3874838971b2320968c44a9cc16427e11f061f3`.

@@ -33,6 +33,30 @@ public sealed class PersistenceTests(PostgresFixture fixture) : IClassFixture<Po
     }
 
     [Fact]
+    public async Task Contextual_range_errors_come_from_server_and_preserve_state()
+    {
+        var owner = Guid.NewGuid();
+        var state = await Start(owner);
+        var far = await Send(owner, Command(state, "attack", 3, target: 5));
+        Assert.Equal(422, far.Status);
+        Assert.Contains("too far", far.Error);
+        Assert.Equal(JsonSerializer.Serialize(state), JsonSerializer.Serialize(await Read(owner)));
+        await using (var db = fixture.Open())
+        {
+            var target = await db.Units.SingleAsync(u => u.MatchId == state.MatchId && u.UnitId == 5);
+            target.X = 2; target.Y = 1;
+            await db.SaveChangesAsync();
+        }
+        var before = await Read(owner);
+        var close = await Send(owner, Command(before, "attack", 3, target: 5));
+        Assert.Equal(422, close.Status);
+        Assert.Contains("too close for artillery", close.Error);
+        Assert.Equal(JsonSerializer.Serialize(before), JsonSerializer.Serialize(await Read(owner)));
+        await using var check = fixture.Open();
+        Assert.Equal(1, await check.Receipts.CountAsync(r => r.MatchId == state.MatchId));
+    }
+
+    [Fact]
     public async Task Fresh_context_restores_relational_health_positions_flags_and_ordered_events()
     {
         var owner = Guid.NewGuid();

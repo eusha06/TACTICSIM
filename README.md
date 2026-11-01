@@ -4,6 +4,11 @@ A small fictional turn-based tactical simulation for a C#/.NET portfolio.
 
 **Current status: playable MVP at [tacticsim.onrender.com](https://tacticsim.onrender.com/).** The Razor Pages board connects to the C# engine using plain JavaScript fetch calls. It includes terrain, unit intel, legal-action highlights, human/computer turns, victory/defeat, New Match, action history, automatic save/resume, and recent completed results. PostgreSQL stores matches, units, ordered events, and accepted commands in relational tables. The Match history page retains earlier matches and can resume an unfinished one. A complete match and refresh/New Match were verified through Chrome controls, along with a 375px mobile layout; see the [verification record and manual checks](docs/verification.md).
 
+**Release 2:** a focused briefing with explicit Begin/Continue, in-game help
+using C# unit/terrain values, and a three-step introduction driven by selection
+and successful moves. Skip/Replay change guidance only. Opening the page never
+creates a match. Deployment verification is recorded in the release checklist.
+
 **Release 1 verified live (2026-11-01, `b387483`):** original SVG soldier squads, armored vehicles and field guns,
 textured terrain and connected water, clear movement/attack/selection markers,
 compact controls and collapsible action history. Rules, saves and HTTP endpoints
@@ -23,7 +28,7 @@ one minute to wake after inactivity. See the [verification record](docs/verifica
 
 - .NET 10 SDK. `global.json` accepts stable .NET 10 feature bands, including the installed 10.0.402 SDK.
 - PostgreSQL running locally or available through a configured connection string. The full solution test run includes real PostgreSQL integration tests; Core tests alone do not need a database.
-- No Node tooling is required.
+- No Node tooling is needed to build or run the game. Optional tutorial regression tests use `node --test scripts/tutorial.test.cjs` with no npm packages or frontend build.
 
 ## Build and run
 
@@ -51,7 +56,7 @@ dotnet run --project src/TacticSim.Web --launch-profile http -- --migrate
 
 If you ran the earlier JSON-snapshot MVP, the migration imports its current and older cached matches, unit flags/health, ordered history, and receipt IDs. It leaves the old `Matches`, `Receipts`, and `Results` tables untouched as backups; the application no longer reads or writes them. Old history remains text labeled as legacy events because its original structured fields/command links were never recorded. Legacy start times were not stored, so imported records use completion/import time. Future commands/events are fully structured.
 
-Click a blue unit, then a green move marker or an orange attack target. Use End Turn to let the computer act. Refresh resumes the latest match for this browser. The anonymous owner cookie lasts up to 30 days; clearing cookies loses access to that browser’s saved matches. New Match switches to a new battlefield without deleting earlier matches. Use Match history to review any saved operation or Resume an unfinished one. Resume preserves health, turn, and used-action flags; it cannot give a unit another move or attack.
+Choose Begin Operation to create a match, or Continue Operation for an unfinished save. During play, select a blue unit, then a round move marker or a dashed orange attack target. How to Play and Replay Tutorial are available without resetting your match. Use End Turn to let the computer act. Refresh resumes the latest match for this browser. The anonymous owner cookie lasts up to 30 days; clearing cookies loses access to that browser’s saved matches. New Match switches to a new battlefield without deleting earlier matches. Use Match history to review any saved operation or Resume an unfinished one. Resume preserves health, turn, and used-action flags; it cannot give a unit another move or attack.
 
 In a restricted execution environment, MSBuild worker processes can stall. These commands successfully restored and built this scaffold without build servers or parallel workers:
 
@@ -105,8 +110,8 @@ dotnet test tests/TacticSim.Tests --no-restore
 
 ## Continuous integration
 
-GitHub Actions builds Release with warnings as errors, runs 83 tests (70 engine,
-13 PostgreSQL), verifies/applies migrations, publishes the web app, builds its
+GitHub Actions builds Release with warnings as errors, runs 84 .NET tests (70 engine,
+14 PostgreSQL), plus eight dependency-free tutorial transition checks, verifies/applies migrations, publishes the web app, builds its
 production Docker image, and runs TLS/proxy/container replacement checks. The
 workflow runs on pushes to `main` and pull requests. CI database credentials are
 for disposable services only; local and deployment secrets stay outside Git.

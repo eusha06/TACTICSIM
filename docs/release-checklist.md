@@ -1,5 +1,23 @@
 # Operation Rivergate — release checklist
 
+## Release 2 — briefing and guided interaction (current)
+
+- Starting commit: `b09c985ce663696776c7568defa5c53f8319a255`, branch `main`.
+- Scope: briefing/Begin/Continue, Core-derived help, successful-action tutorial,
+  skip/replay and contextual server errors. No rule/objective/schema changes.
+- Established target: free Render `srv-dbjis38ae00c73ec5vl0`,
+  https://tacticsim.onrender.com/, existing Prisma PostgreSQL/key ring.
+- [x] Inspect instructions, docs, rendering, command flow and hosting.
+- [x] Implement read-only welcome, protected Begin/Continue and help/tutorial.
+- [x] First/returning visit, rejected actions, skip/replay and refresh tested locally;
+  retry receipts and unrelated responses covered by tutorial/HTTP tests. Final live Resume check remains.
+- [x] Release build zero warnings/errors; 70 engine + 14 PostgreSQL tests; eight
+  tutorial tests; complete local HTTP suite and no EF model drift. Desktop and
+  344×656 mobile briefing/help inspected; moved buttons above secondary notes
+  after observing excessive mobile scrolling.
+- [ ] Desktop/mobile browser checks, commit/push, green CI, exact-source deployment.
+- [ ] Verify live flows and saved-match continuity; record results and stop after Release 2.
+
 ## Release 1 — illustrated battlefield (complete)
 
 - Scope: original SVG Infantry/Armor/Artillery and terrain, connected water,

@@ -12,6 +12,12 @@ PostgreSQL game state, Data Protection keys and security boundaries are unchange
 
 ## PostgreSQL choice and free limits
 
+The user has authorized **Prisma Postgres** as the free database host and the
+other signed-in Render account for free web compute. That Render account showed
+the initial service-creation screen with no existing services. Prisma account
+sign-in is being completed by the user; no database/credential or hosted
+deployment is claimed until it is actually available and verified.
+
 Prefer an existing suitable free PostgreSQL database, with private credentials
 and sufficient retention for saved matches. Do not borrow credentials or change
 the database used by an unrelated application. Keep the original database and
@@ -33,6 +39,51 @@ across free services, including the user's existing app. Observe workspace
 bandwidth/build quotas; the free plan is not an unlimited usage commitment.
 Do not enable paid upgrades or add-ons. These limits come from
 [Render's free-instance documentation](https://render.com/docs/free).
+
+## Prisma Postgres with EF Core
+
+Use Prisma's hosted PostgreSQL service; keep the existing C#/EF Core provider and
+migrations. No Prisma ORM, Node runtime, JavaScript database client, or Prisma
+schema is needed. Check that the selected Prisma workspace is on **Free**, with
+no card/upgrade or paid extras. Use a dedicated TacticSim database rather than
+changing an unrelated database. Public pricing advertises a free tier without
+a time limit; verify the account's actual quotas before creation. Free storage
+still needs private operator backups; do not promise managed backups or an SLA.
+
+Prisma supplies pooled and direct TCP URLs. Convert their fields into private
+Npgsql connection strings in the Render environment:
+
+| Render variable | Prisma connection | Purpose |
+| --- | --- | --- |
+| `ConnectionStrings__DefaultConnection` | Pooled | Gameplay, history, health and Data Protection keys |
+| `ConnectionStrings__MigrationConnection` | Direct | Only the explicit `--migrate` process |
+
+For example, using **placeholders only**:
+
+```text
+# DefaultConnection: use the pooled URL's actual host/user/password/database.
+Host=pooled.db.prisma.io;Port=5432;Database=postgres;Username=<user>;Password=<secret>;SSL Mode=VerifyFull;GSS Encryption Mode=Disable;Maximum Pool Size=5
+# MigrationConnection: use the matching direct URL's actual fields.
+Host=db.prisma.io;Port=5432;Database=postgres;Username=<user>;Password=<secret>;SSL Mode=VerifyFull;GSS Encryption Mode=Disable;Maximum Pool Size=2
+```
+
+Use the actual generated values, not these placeholders or a `prisma+postgres`
+HTTP/Accelerate URL. Keep both strings out of Git, chat, build arguments and
+public logs. A dedicated credential is for this app/database only; preserve any
+existing credentials and key ring. Prisma's direct connection is needed for EF's
+session-level migration lock; the pooler does not preserve session state between
+transactions. Bounded client pools fit the small free-tier connection limits.
+
+The free Render command already runs `--migrate` before the server. Both processes
+inherit the variables: migrations select `MigrationConnection` when nonempty;
+the server always selects `DefaultConnection`. Without the optional override,
+existing installations continue using their original default string. Importing
+an existing database uses its direct URL and a reviewed `pg_dump`/`pg_restore`
+procedure with `--no-owner --no-privileges`, preserving old data/key backups.
+
+References: [Prisma connections](https://www.prisma.io/docs/postgres/database/connecting-to-your-database),
+[transaction pooling](https://www.prisma.io/docs/postgres/database/connection-pooling),
+[current free plan](https://www.prisma.io/pricing).
 
 ## Account steps
 
@@ -96,9 +147,10 @@ Do not enable paid upgrades or add-ons. These limits come from
    and resume with the same browser cookie. Keep live checks unchecked until
    actually observed.
 
-The pending prerequisite is a usable PostgreSQL target: either an existing free
-database or explicit acceptance of Render's temporary demo database. Browser
-account access is available; no paid-resource approval is being requested.
+The pending prerequisite is Prisma sign-in and its actual free database/connection
+details. Render account access is available; no paid-resource approval is being
+requested. Do not substitute the expiring Render database for the requested
+Prisma setup without a new user instruction.
 
 ## Container and proxy behavior
 

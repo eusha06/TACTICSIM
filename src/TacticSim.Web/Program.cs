@@ -53,6 +53,12 @@ builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 builder.Services.AddSingleton<BrowserOwner>();
 builder.Services.AddScoped<MatchService>();
 var connection = builder.Configuration.GetConnectionString("DefaultConnection");
+// Transaction poolers are suitable for gameplay, but migrations need a direct
+// connection for their session-level database lock. Existing setups can keep
+// using only DefaultConnection; the override applies only to --migrate.
+var migrationConnection = builder.Configuration.GetConnectionString("MigrationConnection");
+if (migrate && !string.IsNullOrWhiteSpace(migrationConnection))
+    connection = migrationConnection;
 if (string.IsNullOrWhiteSpace(connection) && builder.Environment.IsDevelopment())
     connection = new NpgsqlConnectionStringBuilder
     {

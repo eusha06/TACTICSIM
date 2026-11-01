@@ -84,7 +84,11 @@ is accepted. `/health` reads required tables and exposes only readiness/revision
 including 503 during database failure; it creates no owners, keys, or matches.
 Normal application startup never applies migrations. The free Render Docker
 command explicitly runs `--migrate` and starts the server only after success,
-after the operator's review/backup gates. No production database files are
+after the operator's review/backup gates. For transaction-pooled hosts such as
+Prisma Postgres, optional `ConnectionStrings__MigrationConnection` is selected
+only by `--migrate` to keep the migration lock on a direct session. Runtime and
+Data Protection keep using `ConnectionStrings__DefaultConnection`; existing
+one-string configurations remain compatible. No production database files are
 stored in the web container. See [deployment.md](deployment.md) for the host's
 trust assumptions, account steps, migration/rollback procedure, and evidence
 limits. The Blueprint is deployment preparation, not evidence of a hosted app.

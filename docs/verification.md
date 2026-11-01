@@ -1,5 +1,26 @@
 # Verification record
 
+## Prisma Postgres preparation — 2026-11-01
+
+The user authorized Prisma Postgres plus another Render account, retaining a $0
+budget. The other account was observed on its first-service creation screen.
+Prisma login was reached; the user chose to complete account sign-in personally.
+No cloud database/credential or TacticSim web service has been created or verified.
+
+Added only optional direct migration configuration: `--migrate` can use
+`ConnectionStrings__MigrationConnection`, falling back to DefaultConnection.
+Gameplay, Data Protection and normal requests still use DefaultConnection.
+This supports transaction-pooled runtime connections without routing EF's
+session-level migration lock through a transaction pooler. No ORM rewrite.
+
+Release build passed with zero warnings/errors and all 83 tests passed. The
+production Docker check also passed under 512 MB: fresh bootstrap, full match
+(turn 14/seven human attacks), TLS/CSRF/ownership/races/history/resume, container
+replacement and outage/recovery. A separate migration process succeeded with a
+valid direct override while its default string was intentionally unreachable.
+These are isolated local PostgreSQL results, not evidence of Prisma connectivity
+or a deployed Render application. Live checks await completed account sign-in.
+
 ## Free-hosting correction — 2026-11-01
 
 The user requires free hosting; no paid service or upgrade is authorized. The

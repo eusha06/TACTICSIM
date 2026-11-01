@@ -23,5 +23,8 @@ services:
         value: "true"
       - key: ConnectionStrings__DefaultConnection
         sync: false
+      # Prisma uses its direct TCP endpoint here; empty falls back to DefaultConnection.
+      - key: ConnectionStrings__MigrationConnection
+        sync: false
       - key: AllowedHosts
         sync: false

@@ -117,6 +117,14 @@ def main():
         docker("run", "--rm", "--network", prefix, "-e", "ConnectionStrings__DefaultConnection", image,
             "dotnet", "TacticSim.Web.dll", "--migrate", env=environment)
         print("PASS: free Render start command migrates an empty database before readiness; reapplication is safe")
+        migration_environment = environment.copy()
+        migration_environment["ConnectionStrings__MigrationConnection"] = environment["ConnectionStrings__DefaultConnection"]
+        migration_environment["ConnectionStrings__DefaultConnection"] = (
+            "Host=127.0.0.1;Port=1;Database=unused;Username=unused;Timeout=1;GSS Encryption Mode=Disable")
+        docker("run", "--rm", "--network", prefix, "-e", "ConnectionStrings__DefaultConnection",
+            "-e", "ConnectionStrings__MigrationConnection", image, "dotnet", "TacticSim.Web.dll", "--migrate",
+            env=migration_environment)
+        print("PASS: migration-only direct connection works independently of the runtime connection")
         connection = http.client.HTTPConnection("127.0.0.1", backend[0])
         connection.request("GET", "/")
         response = connection.getresponse()

@@ -24,12 +24,15 @@
   withdrawn; no paid resource, upgrade or payment method is authorized.
 - The existing unrelated service was directly observed on Render's **Free**
   compute plan. It remains unchanged. `render.yaml` now also selects `plan: free`.
-- Current deployment blocker: a PostgreSQL target/retention choice is needed.
-  Prefer an existing suitable free PostgreSQL database. Render free PostgreSQL
-  expires after 30 days and is later deleted, including game state and cookie
-  keys; a temporary demo requires explicit acceptance of that limit. The user
-  was asked for an existing resource or acceptance of the temporary demo.
-  No TacticSim database/service has been created, and no existing data deleted.
+- Current target: the user authorized Prisma Postgres and the other Render
+  account, with free resources only. That account was observed in Chrome on its
+  first-service creation screen; no service has yet been created there.
+- Prisma's console login was reached. The user explicitly chose to complete
+  account sign-in personally. Do not take over the account authorization step;
+  continue deployment after sign-in is complete and the Free database is available.
+- No TacticSim database/service/credential has been created, no provider database
+  connection has been verified, and no existing data has been deleted. Do not
+  substitute Render's expiring database for the selected Prisma setup.
 - Chrome automation initially reported focus-change errors/timeouts; subsequent
   recovery allowed the local browser checks below. Live browser acceptance
   remains unperformed because no TacticSim deployment exists.
@@ -153,6 +156,28 @@ All results below are local/test evidence, not a Render deployment check.
   acceptance of Render's temporary free database and record its expiry.
 - [ ] Deploy the free service and verify the real assigned URL/commit, play flow,
   two-browser ownership isolation, and resume after redeployment.
+
+### Prisma connection preparation
+
+- [x] Read Prisma's current official connection/pooling docs and pricing. Prisma
+  Postgres supports standard PostgreSQL clients; keep EF Core/Npgsql without a
+  Prisma ORM/Node rewrite. Verify the actual account's Free plan before creation.
+- [x] Added optional `ConnectionStrings__MigrationConnection` for `--migrate`
+  only. Runtime always uses `ConnectionStrings__DefaultConnection`. Empty or
+  missing override preserves the original one-string configuration.
+- [x] Release build passed with zero warnings/errors; all 83 tests passed.
+- [x] Production Docker check passed: 512 MB free start, empty-schema bootstrap,
+  full match (turn 14/seven attacks), security/isolation/history/resume, container
+  replacement and DB outage/recovery. A separate `--migrate` process succeeded
+  using a valid direct override while its runtime connection intentionally
+  pointed to an unreachable port, verifying the override without cloud access.
+- [x] Documented pooled runtime/direct migration endpoints, bounded client pools,
+  TLS, private secret configuration and unchanged fallback behavior.
+- [ ] User completes Prisma sign-in; identify/create a dedicated Free TacticSim
+  database and app credential, preserving unrelated databases/credentials.
+- [ ] Configure both private Npgsql strings in free Render, deploy verified source,
+  and perform the live acceptance checks above. No cloud result is inferred from
+  local PostgreSQL tests.
 
 - [x] Commit and push verified source to existing `main` without history rewrite,
   using configured user identity and no assistant co-author attribution.

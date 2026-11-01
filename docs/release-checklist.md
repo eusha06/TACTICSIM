@@ -1,6 +1,6 @@
 # Operation Rivergate — release checklist
 
-## Release 2 — briefing and guided interaction (current)
+## Release 2 — briefing and guided interaction (complete)
 
 - Starting commit: `b09c985ce663696776c7568defa5c53f8319a255`, branch `main`.
 - Scope: briefing/Begin/Continue, Core-derived help, successful-action tutorial,
@@ -10,13 +10,41 @@
 - [x] Inspect instructions, docs, rendering, command flow and hosting.
 - [x] Implement read-only welcome, protected Begin/Continue and help/tutorial.
 - [x] First/returning visit, rejected actions, skip/replay and refresh tested locally;
-  retry receipts and unrelated responses covered by tutorial/HTTP tests. Final live Resume check remains.
+  retry receipts and unrelated responses covered by tutorial/HTTP tests. Live Resume passed.
 - [x] Release build zero warnings/errors; 70 engine + 14 PostgreSQL tests; eight
   tutorial tests; complete local HTTP suite and no EF model drift. Desktop and
   344×656 mobile briefing/help inspected; moved buttons above secondary notes
   after observing excessive mobile scrolling.
-- [ ] Desktop/mobile browser checks, commit/push, green CI, exact-source deployment.
-- [ ] Verify live flows and saved-match continuity; record results and stop after Release 2.
+- [x] Pushed `72968349fc871327f2fb9870e074f3c249193b0d` under the configured
+  user identity; [CI passed](https://github.com/eusha06/TACTICSIM/actions/runs/41335056072),
+  including eight tutorial tests and production publish/TLS/container replacement.
+- [x] Render `dep-dbjo1o7b9u1s73ejq310` showed **Deploy succeeded | Live**;
+  `/health` returned 200/healthy with that exact SHA. All published JS/CSS/SVG
+  matched source byte for byte. Desktop and 375×667 mobile UI inspected.
+- [x] Live fresh browser: help/history created no match; explicit Begin started one.
+  Opponent selection and water rejection did not advance lessons; accepted
+  Infantry A1→A3 did. Skip survived refresh. New Match retained the first save;
+  Resume opened it directly, with its moved flag. Replay explained Already moved.
+- [x] Live mobile Continue, Space selection, Down/Enter move Armor B1→B2,
+  focus restoration, Got it, End Turn/computer response and help all passed.
+- [x] Local mobile offline request left tutorial step two unchanged. Restoring
+  connectivity and Retry moved Armor once, appended one event and advanced it.
+- [x] Full deployed HTTP suite passed: no match on read, owned Continue fallback,
+  complete match (turn 10, six attacks), CSRF/session isolation, stale/idempotent/
+  concurrent commands, action limits, history/results/Resume and save retention.
+- [x] Pre-Release-1 cookie still restored EXACT match
+  `17fbcda5-242e-4980-89d0-b1a6672f20b5`, turn 3, 11-HP Armor, units/flags,
+  versions and ordered events. Continue discovery did not mutate it; protected
+  Resume preserved it. No migration, key replacement or database reset.
+- [x] Record actual evidence, push documentation and stop after Release 2.
+
+No functional defect remains from these checks. Free compute can cold-start;
+mobile was emulated, not tested on physical devices. No access blockers remain.
+
+Manual check: open a private session → How to Play → History (no match yet) →
+Begin → select blue unit → highlighted move → read attack/End Turn step → Skip,
+refresh and Replay → Briefing/Continue → New Match then History/Resume. On phone,
+check help scrolling and use Tab/arrows/Enter/Space/Escape with a keyboard.
 
 ## Release 1 — illustrated battlefield (complete)
 
@@ -306,4 +334,5 @@ a future configuration update. Free compute cold starts remain an operational li
    pre-release save if one exists. Finish a match and review its retained result.
 
 Release 0 stopped at its original gate. The separately authorized Release 1 is
-recorded above; stop after Release 1. No following release is authorized.
+recorded above; Release 2 was subsequently authorized and is now complete.
+Stop after Release 2. No following release is authorized.

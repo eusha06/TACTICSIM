@@ -54,7 +54,9 @@ A test, deployment, or browser check is only marked passed after observing its r
 
 ## Release 2 authorization
 
-- Release 2 is authorized: focused briefing, Begin/Continue, reusable help and an
+- Release 2 is complete at `https://tacticsim.onrender.com`, deployed source
+  `72968349fc871327f2fb9870e074f3c249193b0d`. Its authorization was: focused
+  briefing, Begin/Continue, reusable help and an
   action-driven first interaction tutorial. Preserve rules; no capture objectives.
 - Page loads/read handlers must never start matches. Begin and any older-match
   Continue must use the existing protected/versioned/idempotent command flow.

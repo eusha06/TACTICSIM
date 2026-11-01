@@ -1,5 +1,52 @@
 # Verification record
 
+## Live Release 2 acceptance
+
+https://tacticsim.onrender.com/ serves
+`72968349fc871327f2fb9870e074f3c249193b0d`. Render deployment
+`dep-dbjo1o7b9u1s73ejq310` showed **Deploy succeeded | Live**. Health returned
+HTTP 200/healthy with that exact revision. [CI passed](https://github.com/eusha06/TACTICSIM/actions/runs/41335056072),
+including 84 .NET tests, eight tutorial tests, migrations/publish, production
+Docker, TLS/proxy checks and container replacement. Published SVG, CSS, site JS
+and tutorial JS were compared with source byte for byte and matched.
+
+A test owner cookie retained since before Release 1 restored exact match
+`17fbcda5-242e-4980-89d0-b1a6672f20b5` after Release 2: same turn 3, wounded
+11-HP Armor, positions, action flags, match/session versions and ordered history.
+Continue discovery returned that owned match without changing it. Protected
+Resume preserved its units, flags and turn. No schema/key/rule reset was performed.
+
+The full live HTTPS suite passed with certificate validation: first-visit reads
+leave state empty; Continue prefers the active unfinished match or finds an owned
+older unfinished one after completion; full match (computer victory, turn 10,
+six human attacks); ownership, CSRF, forged-cookie rejection, duplicate/stale/
+concurrent commands, action limits, history/results and Resume all passed.
+
+Observed live Chrome checks:
+
+- Returning session offered Continue and Begin; desktop welcome inspected.
+- A fresh private session showed Begin only. Opening How to Play and then History
+  still showed No saved matches yet. Only explicit Begin opened the board/tutorial.
+- Opponent selection did not advance step one; friendly selection did. Attempting
+  water returned the server error while step two stayed active. Successful Infantry
+  A1→A3 advanced to the attack/End Turn explanation and restored cell focus.
+- Skip stayed dismissed after refresh. New Match retained the earlier operation;
+  History/Resume reopened `553c9eb4-d38c-4202-a1ed-96a879c4ea0d`, with Infantry
+  A3 and its spent move. Replay did not reset it and explained Already moved.
+- 375×667 iPhone SE emulation inspected welcome and help. Continue preserved the
+  operation. Space toggled Armor selection, Down navigated B2, Enter submitted a
+  legal B1→B2 move, and only then did the tutorial advance. Got it, End Turn,
+  computer response and help passed. No physical-device test is claimed.
+
+Local retry check additionally used DevTools Offline: a failed Armor B1→B2
+request kept the lesson at step two and kept the same pending intent. Restoring
+No throttling and clicking Retry moved once, appended one history event and
+advanced to step three. Connectivity settings were restored.
+
+No functional defect remains from these checks; free-host cold starts remain.
+Only release-record documentation changed after the deployed implementation.
+Stop after Release 2.
+
 ## Release 2 local acceptance
 
 - Release build passed with warnings as errors; 70 engine and 14 PostgreSQL
@@ -23,7 +70,7 @@
   a subsequent legal A3→A4 move completed that step.
 - 344×656 Chrome mobile emulation inspected welcome and scrollable help. Action
   buttons were moved above secondary notes after inspecting excessive scrolling.
-  No physical mobile device was tested. Live deployment checks are pending.
+  No physical mobile device was tested. Live deployment evidence is recorded above.
 
 ## Live Release 1 acceptance — 2026-11-01
 

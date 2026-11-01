@@ -49,6 +49,24 @@ public class MissionPersistenceTests(PostgresFixture fixture) : IClassFixture<Po
     }
 
     [Fact]
+    public async Task Racing_round_loads_never_mix_a_stale_counter_with_new_event_rows()
+    {
+        // Repeated independent matches exercise commands that load while another
+        // request is committing its round. Each request owns a separate DbContext.
+        for (var attempt = 0; attempt < 8; attempt++)
+        {
+            var owner = Guid.NewGuid();
+            var before = await Holding(owner);
+            var command = Command(before, "endTurn");
+            var replies = await Task.WhenAll(Send(owner, command), Send(owner, command));
+            Assert.All(replies, reply => Assert.Equal(200, reply.Status));
+            var after = await Read(owner);
+            Assert.Equal(1, after.Mission!.HeldRounds);
+            Assert.Single(after.History, e => e.Text.Contains("Outpost held after completed round"));
+        }
+    }
+
+    [Fact]
     public async Task New_match_and_resume_preserve_partial_progress_evaluation_state_and_action_flags()
     {
         var owner=Guid.NewGuid(); var first=await Holding(owner);

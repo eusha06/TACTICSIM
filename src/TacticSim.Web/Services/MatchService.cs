@@ -32,7 +32,10 @@ public sealed class MatchService(MatchDbContext db)
     private static readonly Terrain[] MapTiles = Game.CreateDefault().ExportSnapshot().Tiles;
 
     private IQueryable<SavedMatch> OwnedMatches(Guid owner) => db.Matches
-        .Where(m => m.OwnerId == owner).Include(m => m.Units).Include(m => m.Events).AsSplitQuery();
+        // One PostgreSQL statement gives match/version, units and events the same
+        // read snapshot. Split reads can mix an old event counter with new events
+        // from a concurrent command before the version check reaches SaveChanges.
+        .Where(m => m.OwnerId == owner).Include(m => m.Units).Include(m => m.Events).AsSingleQuery();
 
     public async Task<MatchView?> Read(Guid owner, CancellationToken ct)
     {
@@ -97,7 +100,8 @@ public sealed class MatchService(MatchDbContext db)
         else if (command.Kind == "resume")
         {
             // A target ID never bypasses ownership, even for the same browser's old tabs.
-            var target = await OwnedMatches(owner).SingleOrDefaultAsync(m => m.Id == command.TargetMatchId, ct);
+            var target = current?.Id == command.TargetMatchId ? current :
+                await OwnedMatches(owner).SingleOrDefaultAsync(m => m.Id == command.TargetMatchId, ct);
             if (target is null) return new(404, null, "That match was not found in this browser session.");
             match = target;
             if (match.Winner is not null) return new(422, null, "Completed matches can be reviewed, but cannot be resumed.");

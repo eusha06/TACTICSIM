@@ -2,8 +2,8 @@
 
 ## Release 3 local acceptance (2026-11-02)
 
-Release build with warnings as errors passed: zero warnings/errors. All 101 .NET
-tests passed (83 Core, 18 PostgreSQL), and eight tutorial transition tests passed.
+Release build with warnings as errors passed: zero warnings/errors. All 102 .NET
+tests passed (83 Core, 19 PostgreSQL), and eight tutorial transition tests passed.
 Python scripts compile, site.js syntax and whitespace checks pass. The HTTP
 regression suite passed CSRF, separate-owner reads/mutations, forged cookies,
 stale versions, identical/concurrent retries, rejected-action rollback,
@@ -29,7 +29,13 @@ No production migration or deployment is implied by these rehearsal results.
 
 Local native Chrome showed the F4 marker and 0/2 guidance, accepted moves for
 all three unit types and a computer advance that occupied F4 and wounded
-Infantry. Further browser/live evidence is recorded in the release checklist.
+Infantry. A complete native-board victory also passed (turn 19 after one extra empty
+round), including refresh and History/Resume at 1/2, and 375×667 success layout.
+CI exposed an event-loading race: split queries could combine an old counter
+with new event rows. Match graph loads now use one statement; resuming the
+current match reuses that loaded graph. A repeated concurrent-round test covers
+this boundary; the corrected 102-test local run passed. Further live evidence
+is recorded in the release checklist.
 
 ## Live Release 2 acceptance
 

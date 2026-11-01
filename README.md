@@ -117,8 +117,8 @@ dotnet test tests/TacticSim.Tests --no-restore
 
 ## Continuous integration
 
-GitHub Actions builds Release with warnings as errors, runs 101 .NET tests (83 engine,
-18 PostgreSQL), plus eight dependency-free tutorial transition checks, verifies/applies migrations, publishes the web app, builds its
+GitHub Actions builds Release with warnings as errors, runs 102 .NET tests (83 engine,
+19 PostgreSQL), plus eight dependency-free tutorial transition checks, verifies/applies migrations, publishes the web app, builds its
 production Docker image, and runs TLS/proxy/container replacement checks. The
 workflow runs on pushes to `main` and pull requests. CI database credentials are
 for disposable services only; local and deployment secrets stay outside Git.

@@ -22,7 +22,14 @@ showed zero messages. Mobile emulation clicks intermittently failed with native
 `noWindowsAvailable`; the fixed command bar and fresh mobile interactions require
 further inspection. No physical-device or comprehensive accessibility audit claimed.
 
-Deployment checks are recorded in the current release checklist after they occur.
+Final source `8c0961f62fead1d0d1c398fe52a1e5f4ee0432b4` passed
+[CI 41429848050](https://github.com/eusha06/TACTICSIM/actions/runs/41429848050),
+including production Docker/TLS, security/mission/asset checks and replacement.
+The final local Release build again passed with zero warnings/errors, 112 .NET
+and 16 JavaScript tests passed. Source is pushed with the user's configured Git
+identity. These checks do not constitute a Render deployment. Chrome deployment
+input subsequently failed with `cgWindowNotFound`; exact remaining manual steps
+are in the current release checklist. New-version live checks remain unverified.
 Before Release 5 deployment, Render /health was healthy at
 `2fcf0975b74ebd1da185a872a414aab1a924af5e`. The Render page showed successful
 manual deployment `dep-dbk5oa1srm7s739al4tg` at 15:47:20 Asia/Dhaka on 2026-11-02,

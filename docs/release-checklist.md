@@ -15,6 +15,48 @@
 - [ ] Push/green CI, deploy exact source, verify live gameplay and save continuity.
 - [ ] Record evidence and limitations; stop after Release 5.
 
+Implementation source: `8c0961f62fead1d0d1c398fe52a1e5f4ee0432b4`
+(after `0cd6239e67329e4aabfc31063988a3d1c165b1a3`).
+[Final source CI passed](https://github.com/eusha06/TACTICSIM/actions/runs/41429848050):
+Release build, 112 .NET tests (87 Core, 25 PostgreSQL), 16 JavaScript tests,
+EF/model/migration/publish, production Docker/TLS, full security/gameplay,
+mission victory/defeat, page/asset hygiene and container replacement checks.
+Local final build again passed with zero warnings/errors; all 128 tests passed.
+No new schema migration or Core rule change. Three original implemented-UI
+screenshots, demo script and factual CV text are committed.
+
+The first-visit browser check additionally observed Begin Operation and tutorial
+step one in a separate normal Chrome session. The singular action-history label
+was corrected after that inspection. Other local evidence is in verification.md.
+
+Deployment/live acceptance is pending. The last observed hosted revision is
+`2fcf0975b74ebd1da185a872a414aab1a924af5e`; do not describe Release 5 as deployed.
+Render's specific-commit dialog was reachable, but subsequent native Chrome
+operations returned `cgWindowNotFound` (mobile coordinate input had also returned
+`noWindowsAvailable`). Rebinding Chrome did not restore access. No deployment
+API/CLI/hook is configured. The user was asked to reopen the visible Render
+window. No cloud success or new-version browser result is inferred from CI.
+A private anonymous pre-upgrade match, accepted move receipt and owner cookie
+were captured without printing secrets for exact postdeployment comparison.
+Existing production matches, backup tables and keys were not reset.
+
+Remaining deployment/manual play gate:
+1. Keep the desktop unlocked and open [the existing Render service](https://dashboard.render.com/web/srv-dbjis38ae00c73ec5vl0).
+   Manual Deploy → Deploy a specific commit → paste
+   `8c0961f62fead1d0d1c398fe52a1e5f4ee0432b4` → select its row → Deploy commit.
+   Preserve all existing free compute, database/key settings and Docker command.
+2. Wait for Live, then require /health healthy with that exact revision.
+3. Inspect welcome, Begin, tutorial select/move, attack/End Turn and Skip; refresh,
+   History/Resume, real completion report and its surviving-unit/round counts.
+4. Check 375×667 command bar, keyboard Tab/arrows/Home/End, reduced motion and
+   offline/Retry; inspect Console and text clipping on the deployed source.
+5. Run HTTP security/mission/usability checks against the HTTPS origin and compare
+   the private pre-upgrade save/receipt, allowing only new optional report metadata.
+   Confirm ownership, no double action and the same saved game across redeployment.
+
+Stop after Release 5. Implementation/push/CI complete; deployment is an external
+access gate, not a completed or silently skipped check.
+
 ## Release 4 — restrained action presentation (historical gate)
 
 - Starting commit `6343c271d5b638944e5847b4981a319dea94a58b`, branch `main`.

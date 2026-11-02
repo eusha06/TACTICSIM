@@ -24,7 +24,15 @@ public sealed record MatchView(Guid MatchId, long Version, long MatchVersion, st
 public sealed record MatchSummary(Guid MatchId, long MatchVersion, int TurnNumber, string? Winner,
     DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, bool IsActive, long EventCount,
     string MissionType = "Elimination", int HeldRounds = 0, int? ObjectiveX = null, int? ObjectiveY = null);
-public sealed record ServiceReply(int Status, MatchView? State, string? Error = null);
+// Optional command-only presentation. GET/Resume never replay old events.
+public sealed record ActionFrame(string CurrentSide, int TurnNumber, string? Winner,
+    UnitView[] Units, MissionView Mission);
+public sealed record PresentationStep(long Sequence, string Kind, string Side, int Turn, string Text,
+    int? UnitId, int? TargetId, int Damage, bool Destroyed, Position[]? Route, ActionFrame Frame);
+public sealed record PresentationBatch(Guid CommandId, Guid MatchId, long FromMatchVersion,
+    long ToMatchVersion, PresentationStep[] Steps);
+public sealed record ServiceReply(int Status, MatchView? State, string? Error = null,
+    PresentationBatch? Presentation = null);
 
 public sealed class MatchService(MatchDbContext db)
 {
@@ -83,6 +91,7 @@ public sealed class MatchService(MatchDbContext db)
         if (current is null && command.Kind != "new") return new(404, null, "Start a new match first.");
 
         var now = DateTimeOffset.FromUnixTimeMilliseconds(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds());
+        var steps = new List<PresentationStep>();
         SavedMatch match;
         if (command.Kind == "new")
         {
@@ -146,26 +155,38 @@ public sealed class MatchService(MatchDbContext db)
                 entry.Damage = action.Damage;
                 entry.Destroyed = action.Destroyed;
                 entry.ObjectiveProgress = action.ObjectiveProgress;
+                var frame = Game.Restore(action.Snapshot!);
+                steps.Add(new(entry.Sequence, entry.Kind, entry.Side.ToString(), entry.Turn, entry.Text,
+                    action.UnitId, action.TargetId, action.Damage, action.Destroyed,
+                    action.Route?.ToArray(), new(frame.CurrentSide.ToString(), frame.TurnNumber,
+                        frame.Winner?.ToString(), frame.Units.Select(u => UnitInfo(frame, u, false)).ToArray(),
+                        MissionInfo(frame))));
             }
         }
 
         session!.ActiveMatchId = match.Id;
         session.Revision++;
         var state = await View(session.Revision, match, ct);
+        var presentation = steps.Count == 0 ? null : new PresentationBatch(command.CommandId,
+            match.Id, command.ExpectedMatchVersion!.Value, match.Version, steps.ToArray());
+        // Keep the old flat MatchView receipt shape. Extra presentation metadata is
+        // a retry cache, never canonical game state; old receipts omit it entirely.
+        var cached = JsonSerializer.SerializeToNode(state, Json)!.AsObject();
+        if (presentation is not null) cached["presentation"] = JsonSerializer.SerializeToNode(presentation, Json);
         db.Receipts.Add(new CommandReceipt
         {
             OwnerId = owner, CommandId = command.CommandId, MatchId = match.Id, Kind = command.Kind,
             UnitId = command.UnitId, TargetId = command.TargetId, X = command.X, Y = command.Y,
             TargetMatchId = command.TargetMatchId, ExpectedMatchVersion = command.ExpectedMatchVersion,
             ResultingMatchVersion = match.Version, AcceptedAt = now, Fingerprint = fingerprint,
-            ResponseJson = JsonSerializer.Serialize(state, Json)
+            ResponseJson = cached.ToJsonString(Json)
         });
         try
         {
             // EF's single SaveChanges transaction commits session cursor, match, units,
             // ordered events and receipt together. Both revisions are concurrency tokens.
             await db.SaveChangesAsync(ct);
-            return new(200, state);
+            return new(200, state, Presentation: presentation);
         }
         catch (DbUpdateException ex) when (ex is DbUpdateConcurrencyException ||
             ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
@@ -178,10 +199,15 @@ public sealed class MatchService(MatchDbContext db)
         }
     }
 
-    private static ServiceReply Replay(CommandReceipt receipt, string fingerprint) =>
-        receipt.Fingerprint == fingerprint
-            ? new(200, JsonSerializer.Deserialize<MatchView>(receipt.ResponseJson, Json))
-            : new(409, null, "This command ID was already used for a different action. Refresh and try again.");
+    private static ServiceReply Replay(CommandReceipt receipt, string fingerprint)
+    {
+        if (receipt.Fingerprint != fingerprint)
+            return new(409, null, "This command ID was already used for a different action. Refresh and try again.");
+        using var cached = JsonDocument.Parse(receipt.ResponseJson);
+        var presentation = cached.RootElement.TryGetProperty("presentation", out var value)
+            ? value.Deserialize<PresentationBatch>(Json) : null;
+        return new(200, JsonSerializer.Deserialize<MatchView>(receipt.ResponseJson, Json), Presentation: presentation);
+    }
 
     private async Task<ServiceReply> ConflictOrReplay(Guid owner, Guid commandId, string fingerprint,
         string message, CancellationToken ct)
@@ -249,14 +275,18 @@ public sealed class MatchService(MatchDbContext db)
             results.Add(new(saved.Winner.ToString()!, saved.TurnNumber, completed, saved.Mission.ToString()));
         return new(saved.Id, revision, saved.Version, game.CurrentSide.ToString(), game.TurnNumber,
             game.Winner?.ToString(), MapTiles.Select(t => t.ToString()).ToArray(),
-            game.Units.Select(u => new UnitView(u.Id, u.GetType().Name, u.Side.ToString(),
-                u.Position.X, u.Position.Y, u.Health, u.MaxHealth, u.MovementPoints,
-                u.MinimumRange, u.MaximumRange, u.BaseDamage, u.HasMoved, u.HasAttacked,
-                game.GetLegalMoves(Side.Human, u.Id).Select(cell => new MoveView(cell.Key.X, cell.Key.Y, cell.Value)).ToArray(),
-                game.GetLegalTargets(Side.Human, u.Id).Select(target => target.Id).ToArray())).ToArray(),
+            game.Units.Select(u => UnitInfo(game, u)).ToArray(),
             saved.Events.OrderBy(e => e.Sequence).Select(e => new HistoryEntry(e.Turn, e.Side.ToString(), e.Text, e.Sequence)).ToArray(),
             results.OrderByDescending(r => r.CompletedAt).Take(10).ToArray(), MissionInfo(game));
     }
+
+    private static UnitView UnitInfo(Game game, Unit u, bool includeLegalActions = true) =>
+        new(u.Id, u.GetType().Name, u.Side.ToString(), u.Position.X, u.Position.Y,
+            u.Health, u.MaxHealth, u.MovementPoints, u.MinimumRange, u.MaximumRange,
+            u.BaseDamage, u.HasMoved, u.HasAttacked,
+            includeLegalActions ? game.GetLegalMoves(Side.Human, u.Id)
+                .Select(cell => new MoveView(cell.Key.X, cell.Key.Y, cell.Value)).ToArray() : [],
+            includeLegalActions ? game.GetLegalTargets(Side.Human, u.Id).Select(t => t.Id).ToArray() : []);
 
     private static MissionView MissionInfo(Game game)
     {

@@ -39,7 +39,11 @@
     <section id="mission-status" class="mission-status" aria-labelledby="mission-title">
         <div><p class="eyebrow" id="mission-title">OPERATION OBJECTIVE</p><p id="objective-progress" class="objective-progress" role="status" aria-live="polite"></p><p id="objective-instructions"></p></div>
     </section>
-    <div id="victory" class="victory-banner" role="status" hidden></div>
+    <div class="action-feedback" aria-label="Action feedback">
+        <p id="action-message" role="status" aria-live="polite" aria-atomic="true">Ready for orders.</p>
+        <button id="skip-sequence" aria-keyshortcuts="Escape" title="Skip animation (Esc)" class="button secondary" type="button" hidden>Skip animation</button>
+    </div>
+    <div id="victory" tabindex="-1" class="victory-banner" role="status" hidden></div>
     <div class="battle-layout">
         <section class="battle-panel" aria-label="Battlefield">
             <div class="panel-topline"><div class="operation-label"><span class="live-dot"></span> THE CROSSING <span class="muted">/ 8 × 8</span></div><span id="turn-label" class="turn-label" aria-live="polite">Connecting…</span></div>
@@ -91,5 +95,6 @@
 </div>
 @section Scripts {
     <script src="~/js/tutorial.js" asp-append-version="true" defer></script>
+    <script src="~/js/presentation.js" asp-append-version="true" defer></script>
     <script src="~/js/site.js" asp-append-version="true" defer></script>
 }

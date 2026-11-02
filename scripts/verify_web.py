@@ -64,7 +64,41 @@ class Browser:
         payload = command_payload(state, kind, **fields)
         status, body, _ = self.request("/?handler=Command", payload)
         assert status == 200, (status, body)
+        if kind not in ("new", "resume"):
+            verify_presentation(state, body["state"], body.get("presentation"), payload["commandId"])
         return body["state"]
+
+
+def verify_presentation(before, after, batch, command_id):
+    assert batch and batch["commandId"] == command_id
+    assert batch["matchId"] == before["matchId"] == after["matchId"]
+    assert batch["fromMatchVersion"] == before["matchVersion"] and batch["toMatchVersion"] == after["matchVersion"]
+    current = before
+    sequence = before["history"][-1]["sequence"]
+    for step in batch["steps"]:
+        sequence += 1; assert step["sequence"] == sequence
+        frame = step["frame"]
+        if step["kind"] == "Move":
+            unit = next(u for u in current["units"] if u["id"] == step["unitId"])
+            moved = next(u for u in frame["units"] if u["id"] == step["unitId"])
+            route = step["route"]
+            assert route[0] == {"x": unit["x"], "y": unit["y"]}
+            assert route[-1] == {"x": moved["x"], "y": moved["y"]}
+            for a, b in zip(route, route[1:]):
+                assert abs(a["x"]-b["x"])+abs(a["y"]-b["y"]) == 1
+                assert before["tiles"][b["y"]*8+b["x"]] != "Water"
+                assert not any(u["health"] > 0 and (u["x"],u["y"]) == (b["x"],b["y"]) for u in current["units"])
+        if step["kind"] == "Attack":
+            old = next(u for u in current["units"] if u["id"] == step["targetId"])
+            new = next(u for u in frame["units"] if u["id"] == step["targetId"])
+            assert old["health"] - new["health"] == step["damage"]
+            assert step["destroyed"] == (new["health"] == 0)
+        current = frame
+    assert sequence == after["history"][-1]["sequence"]
+    for key in ["currentSide", "turnNumber", "winner", "mission"]: assert current[key] == after[key]
+    for unit in current["units"]:
+        saved = next(u for u in after["units"] if u["id"] == unit["id"])
+        for key in ["x", "y", "health", "hasMoved", "hasAttacked"]: assert unit[key] == saved[key]
 
 
 def parallel_posts(browser, payloads):

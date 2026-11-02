@@ -4,6 +4,11 @@ A small fictional turn-based tactical simulation for a C#/.NET portfolio.
 
 **Current status: playable MVP at [tacticsim.onrender.com](https://tacticsim.onrender.com/).** The Razor Pages board connects to the C# engine using plain JavaScript fetch calls. It includes terrain, unit intel, legal-action highlights, human/computer turns, victory/defeat, New Match, action history, automatic save/resume, and recent completed results. PostgreSQL stores matches, units, ordered events, and accepted commands in relational tables. The Match history page retains earlier matches and can resume an unfinished one. A complete match and refresh/New Match were verified through Chrome controls, along with a 375px mobile layout; see the [verification record and manual checks](docs/verification.md).
 
+**Release 4 implementation:** short route-based movement, attack/damage/health
+feedback and ordered opponent turns driven by server events. Skip animation (Esc)
+and reduced motion settle on the saved board. No rule or database schema change.
+See the release checklist for deployment acceptance.
+
 **Release 3 verified live (`dfe0495`):** new operations capture F4 and hold it through two
 completed human/computer rounds. Losing occupancy resets progress; losing the
 squad fails. Clearing all enemies still requires the hold. Existing saves keep
@@ -118,8 +123,8 @@ dotnet test tests/TacticSim.Tests --no-restore
 
 ## Continuous integration
 
-GitHub Actions builds Release with warnings as errors, runs 102 .NET tests (83 engine,
-19 PostgreSQL), plus eight dependency-free tutorial transition checks, verifies/applies migrations, publishes the web app, builds its
+GitHub Actions builds Release with warnings as errors, runs 108 .NET tests (87 engine,
+21 PostgreSQL), plus 16 dependency-free tutorial/presentation checks, verifies/applies migrations, publishes the web app, builds its
 production Docker image, and runs TLS/proxy/container replacement checks. The
 workflow runs on pushes to `main` and pull requests. CI database credentials are
 for disposable services only; local and deployment secrets stay outside Git.

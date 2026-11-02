@@ -52,6 +52,19 @@
 
 A test, deployment, or browser check is only marked passed after observing its result. Historical results in `docs/verification.md` are evidence for that earlier revision, not a substitute for checking a new release. The Development restart script now targets Release binaries. `scripts/verify_deployment.py` separately checks a Production container through a local TLS edge and replaces that container; neither is proof of a deployed Render service.
 
+## Release 4 authorization
+
+- Release 4 is authorized: restrained route-based movement, attack/damage/health/
+  destruction feedback, ordered opponent actions, concise mission outcome.
+- Keep rules, saved games, endpoints/security and the free host unchanged. C#
+  supplies actual Dijkstra routes and accepted-action frames; JavaScript presents
+  these only. No inferred damage, paths through water or invented game states.
+- Lock commands during presentation; preserve retry IDs/version checks. Refresh
+  shows current saved state without replay. Support reduced motion and Skip;
+  bound a full sequence to about two seconds. No shake, particles or autoplay.
+- Use optional receipt presentation metadata without schema changes. Preserve old
+  receipts and history labels. Test, push, deploy and verify; stop after Release 4.
+
 ## Release 3 authorization (completed)
 
 - Live source `dfe0495ec1c467733ddd6518fba5c76c60050d9a` verified at

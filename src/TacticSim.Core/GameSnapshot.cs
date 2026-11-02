@@ -14,4 +14,5 @@ public enum ActionKind { Move, Attack, EndTurn, ObjectiveHeld, ObjectiveReset, M
 
 public sealed record GameAction(int TurnNumber, Side Side, ActionKind Kind,
     int? UnitId = null, int? TargetId = null, Position? Destination = null,
-    int Damage = 0, bool Destroyed = false, int? ObjectiveProgress = null);
+    int Damage = 0, bool Destroyed = false, int? ObjectiveProgress = null,
+    IReadOnlyList<Position>? Route = null, GameSnapshot? Snapshot = null);

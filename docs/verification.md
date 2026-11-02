@@ -1,5 +1,25 @@
 # Verification record
 
+## Release 4 local acceptance (2026-11-02)
+
+Release build with warnings as errors passed. Engine 87 and PostgreSQL 21 tests
+passed (108 .NET total), including routes around water/occupants, actual Dijkstra
+costs, copied health/destruction/turn frames, receipt replay and concurrent
+commands. EF reports no model drift: Release 4 introduces no schema migration.
+Tutorial/presentation tests cover sequence continuity, old/duplicate responses,
+exact server values, reduced motion, Skip, failed/stalled effects and time budget.
+Full HTTP security/gameplay and mission victory/defeat checks passed; every
+command verifies ordered routes/health frames and final-state agreement.
+
+All 16 tutorial/presentation Node tests passed, including a stalled effect
+released at the hard deadline. Chrome's animation inspector recorded movement
+and attack effects. With animation playback deliberately slowed, Escape skipped
+Armor F2→F3 and the accepted destination persisted. Armor's attack showed six
+server damage and 16→10 enemy HP. 375×667 layout inspected. Rendering emulation
+of prefers-reduced-motion: reduce showed the completed opponent turn immediately
+without the sequence, with correct deaths/health. Further network/live evidence
+will be recorded after observation in the release checklist.
+
 ## Live Release 3 acceptance (2026-11-02)
 
 https://tacticsim.onrender.com/ runs

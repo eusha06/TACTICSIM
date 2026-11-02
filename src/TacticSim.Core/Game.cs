@@ -135,13 +135,17 @@ public sealed class Game
         if (Map.GetTerrain(destination) == Terrain.Water)
             return new ActionResult(GameError.ImpassableTerrain);
         if (IsOccupied(destination)) return new ActionResult(GameError.DestinationOccupied);
-        if (!FindReachableCells(unit).ContainsKey(destination))
+        var reachable = FindReachableCells(unit, out var previous);
+        if (!reachable.ContainsKey(destination))
             return new ActionResult(GameError.Unreachable);
 
+        var firstAction = _actions.Count;
+        var route = TraceRoute(unit.Position, destination, previous);
         unit.Position = destination;
         unit.HasMoved = true;
-        _actions.Add(new GameAction(TurnNumber, actor, ActionKind.Move, unitId, Destination: destination));
+        _actions.Add(new GameAction(TurnNumber, actor, ActionKind.Move, unitId, Destination: destination, Route: route));
         ResetLostOccupancy();
+        CaptureFrames(firstAction);
         return new ActionResult(GameError.None);
     }
 
@@ -150,6 +154,7 @@ public sealed class Game
         var error = ValidateAttack(actor, unitId, targetId);
         if (error != GameError.None) return new ActionResult(error);
 
+        var firstAction = _actions.Count;
         var attacker = _units[unitId];
         var target = _units[targetId];
         var damage = Math.Max(1, attacker.BaseDamage - Map.GetDefense(target.Position));
@@ -162,6 +167,7 @@ public sealed class Game
         UpdateWinner();
         if (Mission == MissionType.Rivergate && Winner == Side.Computer)
             _actions.Add(new GameAction(TurnNumber, actor, ActionKind.MissionFailed, Destination: Objective));
+        CaptureFrames(firstAction);
         return new ActionResult(GameError.None, actualDamage);
     }
 
@@ -170,6 +176,7 @@ public sealed class Game
         var error = ValidateTurn(actor);
         if (error != GameError.None) return new ActionResult(error);
 
+        var firstAction = _actions.Count;
         var completedTurn = TurnNumber;
         _actions.Add(new GameAction(TurnNumber, actor, ActionKind.EndTurn));
         CurrentSide = CurrentSide == Side.Human ? Side.Computer : Side.Human;
@@ -182,6 +189,7 @@ public sealed class Game
         // This is the ONLY place that advances capture: after the computer finishes.
         if (actor == Side.Computer && Mission == MissionType.Rivergate)
             EvaluateOutpost(completedTurn);
+        CaptureFrames(firstAction);
         return new ActionResult(GameError.None);
     }
 
@@ -192,7 +200,18 @@ public sealed class Game
             ValidateMovementAllowance(_units[unitId]) != GameError.None)
             return new ReadOnlyDictionary<Position, int>(new Dictionary<Position, int>());
 
-        return new ReadOnlyDictionary<Position, int>(FindReachableCells(_units[unitId]));
+        return new ReadOnlyDictionary<Position, int>(FindReachableCells(_units[unitId], out _));
+    }
+
+    // The exact shortest route, including origin and destination. Invalid intents
+    // have no route. Movement validation and presentation use the same search.
+    public IReadOnlyList<Position> GetLegalRoute(Side actor, int unitId, Position destination)
+    {
+        if (ValidateUnit(actor, unitId) != GameError.None ||
+            ValidateMovementAllowance(_units[unitId]) != GameError.None) return [];
+        var unit = _units[unitId];
+        var reachable = FindReachableCells(unit, out var previous);
+        return reachable.ContainsKey(destination) ? TraceRoute(unit.Position, destination, previous) : [];
     }
 
     public IReadOnlyList<Unit> GetLegalTargets(Side actor, int unitId) =>
@@ -237,10 +256,11 @@ public sealed class Game
     private bool IsOccupied(Position position) =>
         Units.Any(u => u.IsAlive && u.Position == position);
 
-    private Dictionary<Position, int> FindReachableCells(Unit unit)
+    private Dictionary<Position, int> FindReachableCells(Unit unit, out Dictionary<Position, Position> previous)
     {
         // Dijkstra: expand the cheapest known cell first. A later, cheaper
         // route replaces an earlier cost; stale queue entries are skipped.
+        previous = [];
         var costs = new Dictionary<Position, int> { [unit.Position] = 0 };
         var frontier = new PriorityQueue<Position, int>();
         frontier.Enqueue(unit.Position, 0);
@@ -258,12 +278,32 @@ public sealed class Game
                 if (costs.TryGetValue(next, out var knownCost) && knownCost <= totalCost) continue;
 
                 costs[next] = totalCost;
+                previous[next] = current;
                 frontier.Enqueue(next, totalCost);
             }
         }
 
         costs.Remove(unit.Position);
         return costs;
+    }
+
+    private static IReadOnlyList<Position> TraceRoute(Position origin, Position destination,
+        Dictionary<Position, Position> previous)
+    {
+        var route = new List<Position> { destination };
+        while (route[^1] != origin) route.Add(previous[route[^1]]);
+        route.Reverse();
+        return route.AsReadOnly();
+    }
+
+    private void CaptureFrames(int firstAction)
+    {
+        // Capture after the entire accepted Core command (including reset/victory).
+        // A move/attack/turn can emit related history entries sharing that same
+        // real state. Later computer actions cannot mutate these copied snapshots.
+        var snapshot = ExportSnapshot();
+        for (var i = firstAction; i < _actions.Count; i++)
+            _actions[i] = _actions[i] with { Snapshot = snapshot };
     }
 
     private void ResetLostOccupancy()

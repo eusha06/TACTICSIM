@@ -33,7 +33,11 @@
         }
         return art;
     }
-    let state = null;
+    let state = null; // Latest authoritative saved state, never modified by animation.
+    let display = null; // Only server-provided frames while commands are locked.
+    let presenting = false;
+    const presentation = new TurnPresentation();
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let selectedId = null;
     let busy = false;
     let pending = null; // Kept after a network failure, so Retry uses the SAME command ID.
@@ -154,11 +158,16 @@
             }
             refresh = !!data.state && !!state && data.state.version < state.version;
             const acceptedCommand = pending;
+            const before = state;
             accept(data.state);
             if (response.ok && !refresh) {
                 tutorial?.accepted(acceptedCommand, data.state);
                 saveTutorial();
                 if (acceptedCommand.kind === "new" || acceptedCommand.kind === "resume") enterPlay();
+                if (playing && presentation.canPlay(before, data.state, data.presentation, acceptedCommand.commandId))
+                    await present(before, data.state, data.presentation);
+                else if (data.state && !["new", "resume"].includes(acceptedCommand.kind))
+                    byId("action-message").textContent = data.state.history.at(-1)?.text ?? "Action saved.";
             }
             pending = null;
             if (!response.ok) error(data.error || "That action could not be completed.", response.status === 401 ? () => location.reload() : load);
@@ -172,7 +181,105 @@
         if (refresh) await load();
     }
 
+    async function present(before, after, batch) {
+        if (reducedMotion.matches) {
+            byId("action-message").textContent = batch.steps.at(-1).text;
+            return;
+        }
+        presenting = true;
+        display = before;
+        const messages = [];
+        let skipped = false;
+        byId("skip-sequence").hidden = false;
+        render();
+        try {
+            skipped = await presentation.play(batch, {
+                announce: step => { byId("action-message").textContent = step.text; },
+                animate: (step, duration, signal) => animateStep(step, duration, signal),
+                show: step => {
+                    messages.push({ sequence: step.sequence, turn: step.turn,
+                        side: step.side, text: step.text });
+                    display = { ...before, ...step.frame, history: [...before.history, ...messages] };
+                    render();
+                }
+            });
+        } catch { /* An unavailable visual effect must never turn a saved action into a retry. */ }
+        finally {
+            presentation.skip();
+            display = null;
+            presenting = false;
+            const hadSkipFocus = document.activeElement === byId("skip-sequence");
+            byId("skip-sequence").hidden = true;
+            byId("action-message").textContent = (skipped ? "Animation skipped. " : "") + (after.winner
+                ? after.mission?.conclusion ?? "Operation complete."
+                : batch.steps.some(step => step.side === "Computer") ? "Opponent finished. Your turn." : batch.steps.at(-1).text);
+            render();
+            // submit() unlocks controls next; preserve a keyboard landing point.
+            if (hadSkipFocus) byId(after.winner ? "victory" : "play-title").focus({ preventScroll: true });
+        }
+    }
+    function effect(node, frames, duration, signal) {
+        if (!node?.animate || signal.aborted) return Promise.resolve();
+        const animation = node.animate(frames, { duration, fill: "forwards", easing: "linear" });
+        const cancel = () => animation.cancel();
+        signal.addEventListener("abort", cancel, { once: true });
+        return animation.finished.catch(() => {}).finally(() => signal.removeEventListener("abort", cancel));
+    }
+    async function animateStep(step, duration, signal) {
+        const current = display ?? state;
+        const unitNode = id => board.querySelector(`[data-unit="${id}"]`);
+        const cellNode = point => board.querySelector(`[data-cell="${point.y * 8 + point.x}"]`);
+        if (step.kind === "Move") {
+            const original = unitNode(step.unitId);
+            if (!original) return;
+            const layer = element("div", "action-layer");
+            const moving = original.cloneNode(true);
+            const bounds = board.getBoundingClientRect();
+            const origin = cellNode(step.route[0]).getBoundingClientRect();
+            moving.classList.add("moving-token");
+            Object.assign(moving.style, { left: `${origin.left - bounds.left - board.clientLeft}px`,
+                top: `${origin.top - bounds.top - board.clientTop}px`, width: `${origin.width}px`, height: `${origin.height}px` });
+            layer.append(moving); board.append(layer); original.style.opacity = "0";
+            try {
+                // Geometry only: every waypoint was chosen by the engine's actual search.
+                const frames = step.route.map((point, index) => {
+                    const cell = cellNode(point).getBoundingClientRect();
+                    return { transform: `translate(${cell.left - origin.left}px, ${cell.top - origin.top}px)`,
+                        offset: index / (step.route.length - 1) };
+                });
+                await effect(moving, frames, duration, signal);
+            } finally { layer.remove(); original.style.opacity = ""; }
+        } else if (step.kind === "Attack") {
+            const target = current.units.find(u => u.id === step.targetId);
+            const after = step.frame.units.find(u => u.id === step.targetId);
+            const tokenNode = unitNode(step.targetId);
+            if (!target || !after || !tokenNode) return;
+            const targetCell = cellNode(target);
+            const impact = element("span", "damage-feedback", `−${step.damage}${step.destroyed ? " · destroyed" : ""}`);
+            impact.setAttribute("aria-hidden", "true"); targetCell.append(impact);
+            const hp = tokenNode.querySelector(".unit-hp");
+            if (hp) hp.textContent = `${after.health}/${after.maxHealth}`;
+            try {
+                await Promise.all([
+                    effect(unitNode(step.unitId)?.querySelector(".unit-art"), [{ opacity: 1 }, { opacity: .55 }, { opacity: 1 }], duration, signal),
+                    effect(targetCell, [{ boxShadow: "inset 0 0 0 3px #f2c895" }, { boxShadow: "inset 0 0 0 1px #f2c89500" }], duration, signal),
+                    effect(tokenNode.querySelector(".health-fill"), [{ width: `${100 * target.health / target.maxHealth}%` }, { width: `${100 * after.health / after.maxHealth}%` }], duration, signal),
+                    effect(impact, [{ opacity: 1 }, { opacity: 1, offset: .8 }, { opacity: 0 }], duration, signal),
+                    step.destroyed ? effect(tokenNode, [{ opacity: 1 }, { opacity: .8, offset: .5 }, { opacity: 0 }], duration, signal) : Promise.resolve()
+                ]);
+            } finally { impact.remove(); }
+        } else {
+            await new Promise(resolve => {
+                if (signal.aborted) return resolve();
+                const finish = () => { clearTimeout(timer); signal.removeEventListener("abort", finish); resolve(); };
+                const timer = setTimeout(finish, Math.min(duration, 100));
+                signal.addEventListener("abort", finish, { once: true });
+            });
+        }
+    }
+
     function render() {
+        const shown = display ?? state;
         const locked = busy || !!pending;
         byId("welcome").hidden = playing;
         byId("play-area").hidden = !playing;
@@ -183,33 +290,34 @@
         byId("continue-operation").textContent = continueMatch ? `Continue Operation · Turn ${continueMatch.turnNumber}` : "Continue Operation";
         byId("welcome-status").textContent = busy ? "Retrieving your operation…" : !loaded ? "Connect to check your saved operation." :
             continueMatch ? "An unfinished operation is ready. Begin starts a separate match; your saves stay in Match history." :
-            state?.winner ? "Your last operation is complete. Begin again or review your saved matches." : "Ready when you are. Begin Operation starts your first match.";
-        byId("help-objective").textContent = playing && state?.mission ? state.mission.instructions :
+            shown?.winner ? "Your last operation is complete. Begin again or review your saved matches." : "Ready when you are. Begin Operation starts your first match.";
+        byId("help-objective").textContent = playing && shown?.mission ? shown.mission.instructions :
             "New Rivergate objective: capture F4 and hold it through two completed human-plus-computer rounds. Older saves keep their elimination objective.";
-        byId("help-capture").hidden = playing && state?.mission?.type !== "Rivergate";
+        byId("help-capture").hidden = playing && shown?.mission?.type !== "Rivergate";
         if (!playing && continueMatch?.missionType === "Elimination") byId("welcome-status").textContent =
             "Continue restores your legacy elimination match. Begin creates a separate Rivergate capture mission; all saves stay in Match history.";
-        byId("replay-tutorial").disabled = locked || !state;
-        byId("replay-note").textContent = state ? "Replay changes guidance only; your match and remaining actions stay as they are." : "Begin or continue an operation to practice without resetting it.";
-        byId("new-match").disabled = locked || !state;
-        byId("end-turn").disabled = locked || !state || !!state.winner || state.currentSide !== "Human";
+        byId("replay-tutorial").disabled = locked || !shown;
+        byId("replay-note").textContent = shown ? "Replay changes guidance only; your match and remaining actions stay as they are." : "Begin or continue an operation to practice without resetting it.";
+        byId("show-briefing").disabled = locked;
+        byId("new-match").disabled = locked || !shown;
+        byId("end-turn").disabled = locked || !shown || !!shown.winner || shown.currentSide !== "Human";
         board.setAttribute("aria-busy", String(busy));
-        if (!state) return;
-        const selected = state.units.find(u => u.id === selectedId);
-        const mission = state.mission;
+        if (!shown) return;
+        const selected = shown.units.find(u => u.id === selectedId);
+        const mission = shown.mission;
         const capture = mission?.type === "Rivergate";
         byId("objective-progress").textContent = capture ? `Hold the outpost: ${mission.heldRounds}/${mission.requiredRounds} rounds · ${String.fromCharCode(65 + mission.x)}${mission.y + 1}` : "Legacy elimination match";
         byId("objective-instructions").textContent = mission?.instructions ?? "Defeat the opposing squad. This saved match has no capture objective.";
-        const actionable = selected?.side === "Human" && selected.health > 0 && !state.winner;
+        const actionable = !locked && selected?.side === "Human" && selected.health > 0 && !shown.winner;
         // These lists come from C#. JavaScript never calculates a route, range, or damage.
         const moves = actionable ? selected.legalMoves : [];
         const targets = actionable ? selected.legalTargets : [];
         const focusCell = document.activeElement?.dataset.cell;
         const cells = document.createDocumentFragment();
-        for (let index = 0; index < state.tiles.length; index++) {
+        for (let index = 0; index < shown.tiles.length; index++) {
             const x = index % 8, y = Math.floor(index / 8);
-            const terrain = state.tiles[index];
-            const unit = state.units.find(u => u.health > 0 && u.x === x && u.y === y);
+            const terrain = shown.tiles[index];
+            const unit = shown.units.find(u => u.health > 0 && u.x === x && u.y === y);
             const move = moves.find(m => m.x === x && m.y === y);
             const target = unit && targets.includes(unit.id);
             const outpost = capture && mission.x === x && mission.y === y;
@@ -233,6 +341,7 @@
             if (outpost) cell.append(illustration("outpost", "objective-art"), element("span", "objective-label", "OUTPOST"));
             if (unit) {
                 const tokenNode = element("span", `unit-token ${unit.side.toLowerCase()} ${unit.hasAttacked ? "spent" : ""}`);
+                tokenNode.dataset.unit = String(unit.id);
                 tokenNode.setAttribute("aria-hidden", "true");
                 tokenNode.append(illustration(unit.type.toLowerCase(), "unit-art"), element("span", "unit-name", unit.type));
                 const health = element("span", "health-track");
@@ -248,14 +357,14 @@
         }
         board.replaceChildren(cells);
         if (focusCell !== undefined && !locked) board.querySelector(`[data-cell="${focusCell}"]`)?.focus({ preventScroll: true });
-        byId("turn-label").textContent = `TURN ${String(state.turnNumber).padStart(2, "0")} · ${state.winner ? "COMPLETE" : "YOUR COMMAND"}`;
-        byId("turn-title").textContent = busy && pending?.kind === "endTurn" ? "Opponent's turn…" : state.winner ? "Match complete" : "Your turn";
-        byId("turn-number").textContent = `T${String(state.turnNumber).padStart(2, "0")}`;
-        byId("turn-description").textContent = state.winner ? "Start a fresh operation when you're ready." : busy ? "Saving your command…" : "Move your squad, pick your targets, hold the ground.";
-        byId("board-hint").textContent = state.winner ? "Operation complete" : selected ? `${selected.type} #${selected.id} selected${actionable ? " · choose a cell or target" : " · opponent unit"}` : "Select a blue unit to begin";
-        byId("victory").hidden = !state.winner;
-        if (state.winner) {
-            byId("victory").replaceChildren(element("b", "", capture ? state.winner === "Human" ? "Mission success." : "Mission failed." : state.winner === "Human" ? "Victory. The field is yours." : "Defeat. Your squad was eliminated."), document.createTextNode(`${mission?.conclusion ?? ""} Completed on turn ${state.turnNumber}.`));
+        byId("turn-label").textContent = `TURN ${String(shown.turnNumber).padStart(2, "0")} · ${shown.winner ? "COMPLETE" : shown.currentSide === "Computer" ? "OPPONENT" : "YOUR COMMAND"}`;
+        byId("turn-title").textContent = presenting ? "Presenting saved actions…" : busy && pending?.kind === "endTurn" ? "Opponent's turn…" : shown.winner ? "Match complete" : "Your turn";
+        byId("turn-number").textContent = `T${String(shown.turnNumber).padStart(2, "0")}`;
+        byId("turn-description").textContent = shown.winner ? "Start a fresh operation when you're ready." : busy ? "Saving your command…" : "Move your squad, pick your targets, hold the ground.";
+        byId("board-hint").textContent = shown.winner ? "Operation complete" : selected ? `${selected.type} #${selected.id} selected${actionable ? " · choose a cell or target" : " · opponent unit"}` : "Select a blue unit to begin";
+        byId("victory").hidden = presenting || !shown.winner;
+        if (shown.winner) {
+            byId("victory").replaceChildren(element("b", "", capture ? shown.winner === "Human" ? "Mission success." : "Mission failed." : shown.winner === "Human" ? "Victory. The field is yours." : "Defeat. Your squad was eliminated."), document.createTextNode(`${mission?.conclusion ?? ""} Completed on turn ${shown.turnNumber}.`));
         }
         renderDetails(selected);
         renderSquad();
@@ -263,7 +372,7 @@
         renderTutorial(selected, locked);
     }
     function renderTutorial(selected, locked) {
-        const active = playing && tutorial && tutorial.step < 3;
+        const active = !presenting && playing && tutorial && tutorial.step < 3;
         byId("tutorial").hidden = !active;
         board.classList.toggle("tutorial-select", !!active && tutorial.step === 0 && !state.winner);
         if (!active) return;
@@ -286,6 +395,7 @@
         }
         byId("tutorial-done").hidden = step !== 2;
         byId("tutorial-done").disabled = locked;
+        byId("tutorial-skip").disabled = locked;
     }
     function choose(x, y, unit) {
         if (busy || pending) return;
@@ -304,6 +414,7 @@
         }
     }
     function renderDetails(unit) {
+        const shown = display ?? state;
         const details = byId("unit-details");
         details.replaceChildren();
         if (!unit) {
@@ -324,11 +435,11 @@
             const row = element("div", "action-status", label);
             row.append(element("b", "", value)); details.append(row);
         }
-        details.append(element("p", "intel-location", `${String.fromCharCode(65 + unit.x)}${unit.y + 1} / ${state.tiles[unit.y * 8 + unit.x]}`));
+        details.append(element("p", "intel-location", `${String.fromCharCode(65 + unit.x)}${unit.y + 1} / ${shown.tiles[unit.y * 8 + unit.x]}`));
     }
     function renderSquad() {
         const squad = byId("squad"); squad.replaceChildren();
-        const humans = state.units.filter(u => u.side === "Human");
+        const humans = (display ?? state).units.filter(u => u.side === "Human");
         byId("squad-count").textContent = `${humans.filter(u => u.health > 0).length} / 3 ACTIVE`;
         for (const unit of humans) {
             const row = element("button", `squad-row ${unit.id === selectedId ? "active" : ""} ${unit.health === 0 ? "dead" : ""}`);
@@ -342,19 +453,28 @@
         }
     }
     function renderHistory() {
+        const shown = display ?? state;
         const history = byId("history");
         history.replaceChildren();
-        byId("history-count").textContent = `${state.history.length} entries`;
-        for (const entry of [...state.history].reverse()) {
+        byId("history-count").textContent = `${shown.history.length} entries`;
+        for (const entry of [...shown.history].reverse()) {
             const row = element("li", "history-entry");
             row.append(element("span", "history-turn", `T${String(entry.turn).padStart(2, "0")}`), element("span", `history-dot ${entry.side.toLowerCase()}`), element("span", "", entry.text));
             history.append(row);
         }
         const results = byId("results"); results.replaceChildren();
-        for (const result of state.results) results.append(element("li", "", `${result.missionType === "Rivergate" ? result.winner === "Human" ? "Rivergate success" : "Rivergate failure" : result.winner === "Human" ? "Legacy victory" : "Legacy defeat"} · ${result.turns} turns · ${new Date(result.completedAt).toLocaleDateString()}`));
-        if (!state.results.length) results.append(element("li", "", "No completed matches yet."));
+        for (const result of shown.results) results.append(element("li", "", `${result.missionType === "Rivergate" ? result.winner === "Human" ? "Rivergate success" : "Rivergate failure" : result.winner === "Human" ? "Legacy victory" : "Legacy defeat"} · ${result.turns} turns · ${new Date(result.completedAt).toLocaleDateString()}`));
+        if (!shown.results.length) results.append(element("li", "", "No completed matches yet."));
     }
 
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && presenting) {
+            event.preventDefault(); presentation.skip();
+        }
+    });
+    byId("skip-sequence").addEventListener("click", () => presentation.skip());
+    reducedMotion.addEventListener("change", () => { if (reducedMotion.matches) presentation.skip(); });
+    window.addEventListener("resize", () => { if (presenting) presentation.skip(); });
     byId("begin-operation").addEventListener("click", () => command("new"));
     byId("continue-operation").addEventListener("click", async () => {
         await load();
@@ -363,6 +483,7 @@
         else await command("resume", { targetMatchId: continueMatch.matchId });
     });
     byId("show-briefing").addEventListener("click", () => {
+        if (busy || pending) return;
         playing = false; wantPlay = false; rememberedMatch = null;
         preference("sessionStorage", "tacticsim.playing", null);
         render(); byId("welcome-title").focus(); load();
@@ -375,6 +496,7 @@
         tutorial.replay(); selectedId = null; saveTutorial(); enterPlay();
     });
     function dismissTutorial() {
+        if (busy || pending) return;
         tutorial.skip(); saveTutorial();
         preference("localStorage", "tacticsim.tutorial.dismissed", "1");
         render(); byId("play-title").focus();
@@ -387,6 +509,7 @@
     byId("confirm-new").addEventListener("click", () => { byId("new-dialog").close(); selectedId = null; command("new"); });
     byId("retry").addEventListener("click", () => retryAction());
     board.addEventListener("keydown", event => {
+        if (presenting || busy || pending) return;
         if (event.key === "Escape") { selectedId = null; render(); return; }
         const index = Number(event.target.dataset.cell);
         if (!Number.isInteger(index)) return;
@@ -394,6 +517,6 @@
         const next = { ArrowLeft: x > 0 ? index - 1 : index, ArrowRight: x < 7 ? index + 1 : index, ArrowUp: y > 0 ? index - 8 : index, ArrowDown: y < 7 ? index + 8 : index }[event.key];
         if (next !== undefined) { event.preventDefault(); board.querySelector(`[data-cell="${next}"]`)?.focus(); }
     });
-    document.addEventListener("visibilitychange", () => { if (!document.hidden && !busy && !pending) load(); });
+    document.addEventListener("visibilitychange", () => { if (document.hidden && presenting) presentation.skip(); if (!document.hidden && !busy && !pending) load(); });
     load();
 })();

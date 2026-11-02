@@ -149,3 +149,37 @@ The browser renders mission coordinates, counts, instructions and conclusions
 from C#. It draws an original SVG outpost only on the server-supplied objective,
 with a smaller marker when occupied. Briefing/help/tutorial/history distinguish
 legacy elimination saves from new capture matches. No browser capture rules.
+
+## Release 4 command presentation
+
+The Dijkstra search now retains predecessor cells. Both `GetLegalRoute` and
+accepted Move events trace that same shortest route, including origin and
+endpoint. Movement cost, blocking, budgets, tie handling and opponent choices
+are unchanged. Each successful Core move/attack/turn captures a copied snapshot
+after all related reset/victory logic. Related history entries share that actual
+post-command frame; later opponent commands cannot change an earlier frame.
+
+Web returns an optional `presentation` beside command `state`: command/match IDs,
+base/result match versions, ordered event sequence/turn/text, unit/target IDs,
+actual damage/destruction, route, and complete server-produced display frames.
+Intermediate legal-action arrays are empty because commands are locked. The
+normal final state contains the authoritative legal choices. Frames include turn,
+unit health/actions/positions and mission instructions/progress/outcome from C#.
+
+No schema migration: canonical relational match/unit/event rows remain unchanged.
+The optional presentation is cached as an extra property in the existing flat
+receipt JSON, atomically with those rows. Retry returns the exact same sequence;
+old receipt JSON lacks that property and remains compatible. Read/refresh,
+History and Resume return saved state without replaying earlier actions. This
+short command presentation does not turn action history into a replay feature.
+
+`TurnPresentation` checks command/match/version/event continuity, orders frames,
+and caps the sequence at roughly two seconds. The renderer moves a visual clone
+through supplied waypoints, animates health to supplied values and uses supplied
+damage/destruction. It never calculates a route, damage or intermediate game
+state. `state` remains the saved final response while `display` temporarily uses
+server frames. Controls stay locked through saving/presentation. Skip/Escape,
+reduced motion, resize, hidden tabs and effect failures settle on the final
+saved state; a hard deadline also releases a stalled effect. Browser refresh
+reads the already committed state, never resubmits an animation. Failed network
+requests retain the original pending command ID for safe retry.

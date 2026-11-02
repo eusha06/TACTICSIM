@@ -45,7 +45,7 @@ public class IndexModel(BrowserOwner owner, MatchService matches, ILogger<IndexM
             if (!ModelState.IsValid || command is null)
                 return new JsonResult(new { error = "Send a valid JSON command." }) { StatusCode = 400 };
             var reply = await matches.Execute(id, command, ct);
-            return new JsonResult(new { state = reply.State, error = reply.Error }) { StatusCode = reply.Status };
+            return new JsonResult(new { state = reply.State, error = reply.Error, presentation = reply.Presentation }) { StatusCode = reply.Status };
         });
 
     private async Task<IActionResult> WithOwner(Func<Guid, Task<IActionResult>> action)

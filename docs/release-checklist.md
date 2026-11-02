@@ -1,5 +1,18 @@
 # Operation Rivergate — release checklist
 
+## Release 4 — restrained action presentation (current)
+
+- Starting commit `6343c271d5b638944e5847b4981a319dea94a58b`, branch `main`.
+- Target: existing free Render `srv-dbjis38ae00c73ec5vl0`,
+  https://tacticsim.onrender.com/, existing Prisma PostgreSQL and key ring.
+- [x] Inspect engine/routes, event/receipt persistence, board rendering and host.
+- [x] Expose actual routes and authoritative ordered frames, preserve old receipts.
+- [x] Add short movement/attack/health/destruction feedback and ordered opponent turn.
+- [ ] Lock input, handle retries/refresh/rapid input, reduced motion and Skip.
+- [ ] Automated route/frame, persistence/security and presentation checks; browser desktop/mobile.
+- [ ] Push, green CI, deploy exact source and verify old saves and live interactions.
+- [ ] Record evidence/manual checklist; stop after Release 4.
+
 ## Release 3 — Rivergate capture and hold (complete)
 
 - Starting commit: `7873573`, branch `main`; date 2026-11-02 (Asia/Dhaka).

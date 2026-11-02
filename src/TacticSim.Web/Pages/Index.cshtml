@@ -4,32 +4,50 @@
 @{
     ViewData["Title"] = "Operation Rivergate";
 }
-<div id="game-app" class="game-shell" data-art-url="@FileVersionProvider.AddFileVersionToPath(Request.PathBase, Url.Content("~/art/battlefield.svg"))" data-state-url="@Url.Page("/Index", "State")" data-command-url="@Url.Page("/Index", "Command")">
+<div id="game-app" class="game-shell" data-history-url="@Url.Page("/History")" data-art-url="@FileVersionProvider.AddFileVersionToPath(Request.PathBase, Url.Content("~/art/battlefield.svg"))" data-state-url="@Url.Page("/Index", "State")" data-command-url="@Url.Page("/Index", "Command")">
     @Html.AntiForgeryToken()
+    <p id="connection-status" class="connection-status" role="status" aria-live="polite" hidden></p>
     <div id="error" class="error-banner" role="alert" hidden><span id="error-text"></span><button id="retry" type="button">Retry</button></div>
     <section id="welcome" class="welcome" aria-labelledby="welcome-title">
-        <p class="eyebrow">TACTICSIM</p>
-        <h1 id="welcome-title" tabindex="-1">TacticSim: Operation Rivergate</h1>
-        <p class="welcome-intro">Lead three blue units against a deterministic orange opponent. Fight your way to the communications outpost at F4, then defend it.</p>
-        <p class="welcome-objective"><span>YOUR OBJECTIVE</span><strong>Capture and hold the communications outpost.</strong></p>
-        <div class="welcome-actions">
-            <button id="continue-operation" class="button primary" type="button" hidden disabled>Continue Operation</button>
-            <button id="begin-operation" aria-describedby="welcome-status" class="button primary" type="button" disabled>Begin Operation</button>
-            <button class="button secondary help-open" type="button">How to Play</button>
+        <div class="welcome-copy">
+            <p class="eyebrow">A SMALL TURN-BASED TACTICAL GAME</p>
+            <h1 id="welcome-title" tabindex="-1"><span class="visually-hidden">TacticSim: </span>Operation Rivergate</h1>
+            <p class="welcome-intro">Lead Infantry, Armor and Artillery across a miniature river-delta battlefield. Every move counts; combat has no dice rolls.</p>
+            <p class="welcome-objective"><span>YOUR OBJECTIVE</span><strong>Capture and hold the communications outpost.</strong></p>
+            <div class="welcome-actions">
+                <button id="continue-operation" class="button primary" type="button" hidden disabled>Continue Operation</button>
+                <button id="begin-operation" aria-describedby="welcome-status" class="button primary" type="button" disabled>Begin Operation</button>
+                <button class="button secondary help-open" type="button">How to Play</button>
+            </div>
+            <p id="welcome-status" class="welcome-status" role="status" aria-live="polite">Checking for a saved operation…</p>
+            <ol class="first-orders"><li><b>Select a blue unit.</b> Its marked cells are legal moves.</li><li><b>Move, then attack.</b> Each unit has one of each; attacking locks movement.</li><li><b>End Turn.</b> Keep a friendly unit alive on F4 through @TacticSim.Core.Game.RequiredHoldRounds completed rounds. Losing occupancy resets the hold; clearing enemies still requires capture.</li></ol>
+            <p class="welcome-note">Begin creates a separate operation. Your progress saves after each accepted action.</p>
+            <a class="welcome-history" asp-page="/History">Review saved matches →</a>
         </div>
-        <p class="welcome-note">Keep any friendly unit alive on F4 through @TacticSim.Core.Game.RequiredHoldRounds completed human-plus-computer rounds. Losing occupancy resets progress. Even after clearing the enemy, finish the hold.</p>
-        <p id="welcome-status" class="welcome-status" role="status">Checking for a saved operation…</p>
-        <a class="welcome-history" asp-page="/History">Review saved matches</a>
-        <div class="welcome-miniatures" aria-hidden="true">
-            @foreach (var unit in Model.GuideUnits)
-            {
-                <svg viewBox="0 0 100 100"><use href="@FileVersionProvider.AddFileVersionToPath(Request.PathBase, Url.Content("~/art/battlefield.svg"))#@unit.GetType().Name.ToLowerInvariant()" /></svg>
-            }
-        </div>
+        <figure class="welcome-preview">
+            <div class="preview-board" role="img" aria-label="Rivergate starting battlefield: blue squad in the northwest, orange squad in the southeast, water blocking the center and a land outpost at F4.">
+                @for (var y = 0; y < TacticSim.Core.BattleMap.Size; y++)
+                {
+                    @for (var x = 0; x < TacticSim.Core.BattleMap.Size; x++)
+                    {
+                        var point = new TacticSim.Core.Position(x, y);
+                        var unit = Model.Preview.Units.FirstOrDefault(u => u.IsAlive && u.Position == point);
+                        var outpost = point == Model.Preview.Objective;
+                        var art = FileVersionProvider.AddFileVersionToPath(Request.PathBase, Url.Content("~/art/battlefield.svg"));
+                        <span class="preview-cell @(unit?.Side == TacticSim.Core.Side.Computer ? "computer" : "") @(outpost ? "preview-outpost" : "")" aria-hidden="true">
+                            <svg viewBox="0 0 100 100"><use href="@art#@Model.Preview.Map.GetTerrain(point).ToString().ToLowerInvariant()" /></svg>
+                            @if (outpost) { <svg class="preview-piece" viewBox="0 0 100 100"><use href="@art#outpost" /></svg> }
+                            @if (unit is not null) { <svg class="preview-piece" viewBox="0 0 100 100"><use href="@art#@unit.GetType().Name.ToLowerInvariant()" /></svg> }
+                        </span>
+                    }
+                }
+            </div>
+            <figcaption><b>The Rivergate battlefield</b><span>Blue: your squad · Orange: opponent · Outpost: F4</span>Actual starting terrain and unit placement. Preview only.</figcaption>
+        </figure>
     </section>
     <div id="play-area" hidden>
     <div class="page-heading">
-        <div><p class="eyebrow">TACTICSIM / FIELD EDITION</p><h1 id="play-title" tabindex="-1">Operation Rivergate<span>.</span></h1><p class="intro">Move, attack, and protect your squad. Follow this operation’s objective.</p></div>
+        <div><p class="eyebrow">TACTICSIM / TURN-BASED TACTICS</p><h1 id="play-title" tabindex="-1">Operation Rivergate<span>.</span></h1><p class="intro">Move, attack, and protect your squad. Follow this operation’s objective.</p></div>
         <div class="play-tools"><button id="show-briefing" class="button secondary" type="button">Briefing</button><button class="button secondary help-open" type="button">How to Play</button><button id="new-match" class="button secondary" type="button" disabled><span aria-hidden="true">↻</span> New Match</button></div>
     </div>
     <section id="tutorial" class="tutorial" aria-labelledby="tutorial-title" hidden>
@@ -44,6 +62,12 @@
         <button id="skip-sequence" aria-keyshortcuts="Escape" title="Skip animation (Esc)" class="button secondary" type="button" hidden>Skip animation</button>
     </div>
     <div id="victory" tabindex="-1" class="victory-banner" role="status" hidden></div>
+    <section id="mission-report" class="panel mission-report" aria-labelledby="report-title" hidden>
+        <p class="eyebrow">OPERATION REPORT</p><h2 id="report-title" tabindex="-1"></h2>
+        <p id="report-round-note" class="intro"></p>
+        <dl id="report-facts" class="report-facts"></dl>
+        <a id="report-history" class="button secondary" asp-page="/History">Review this operation</a>
+    </section>
     <div class="battle-layout">
         <section class="battle-panel" aria-label="Battlefield">
             <div class="panel-topline"><div class="operation-label"><span class="live-dot"></span> THE CROSSING <span class="muted">/ 8 × 8</span></div><span id="turn-label" class="turn-label" aria-live="polite">Connecting…</span></div>
@@ -52,7 +76,7 @@
                 <div class="row-labels" aria-hidden="true">@for (var row = 1; row <= 8; row++) { <span>@row</span> }</div>
                 <div id="board" class="board" role="group" aria-label="8 by 8 tactical board" aria-busy="true" aria-describedby="board-controls"></div>
             </div>
-            <p id="board-controls" class="board-controls">Select a blue unit, then a marked cell to move or an outlined opponent to attack. Keyboard: arrows to navigate, Enter to choose, Esc to deselect.</p>
+            <p id="board-controls" class="board-controls">Select a blue unit, then a marked cell to move or an outlined opponent to attack. Keyboard: Tab into the board, arrows to navigate, Enter/Space to choose, Home/End for the row, Esc to deselect.</p>
             <div class="board-caption"><span><i class="sample move-sample"></i> Legal move <i class="sample attack-sample"></i> Attack target</span><span id="board-hint" role="status">Loading your battlefield…</span></div>
             <div class="terrain-legend" aria-label="Terrain legend"><span class="legend-title">TERRAIN</span><span><i class="terrain-sample plain"></i> Grass <small>plain</small></span><span><i class="terrain-sample forest"></i> Forest <small>+1 defense</small></span><span><i class="terrain-sample hill"></i> Hill <small>+2 defense</small></span><span><i class="terrain-sample water"></i> Water <small>impassable</small></span></div>
         </section>
@@ -63,7 +87,7 @@
         </aside>
     </div>
     <div class="lower-layout">
-        <details class="panel history-panel"><summary class="section-heading"><div><p class="eyebrow">FIELD NOTES</p><h2>Action history</h2></div><span id="history-count" class="subtle-badge">0 actions</span></summary><p class="history-note">Accepted actions, newest first. This is a history, not a replay.</p><ol id="history" class="history-list" aria-label="Action history, newest first"><li class="empty-state">Your actions will appear here.</li></ol></details>
+        <details class="panel history-panel"><summary class="section-heading"><div><p class="eyebrow">FIELD NOTES</p><h2>Action history</h2></div><span id="history-count" class="subtle-badge">0 entries</span></summary><p class="history-note">Accepted actions, newest first. This is a history, not a replay.</p><ol id="history" class="history-list" aria-label="Action history, newest first"><li class="empty-state">Your actions will appear here.</li></ol></details>
         <details class="panel briefing-panel"><summary>Quick reminders</summary><ol class="briefing-list"><li><b>Choose your unit.</b><span>Blue is your squad. Orange is the opponent.</span></li><li><b>Move, then attack.</b><span>One of each per unit. Attacking ends its movement.</span></li><li><b>Use the ground.</b><span>Rough terrain slows you; forests and hills protect you.</span></li></ol><p class="briefing-note">Artillery range: 2–4 cells. Terrain does not block line of sight. No random combat.</p><details><summary>Recent completed matches</summary><ul id="results" class="results-list"><li>No completed matches yet.</li></ul></details></details>
     </div>
     </div>

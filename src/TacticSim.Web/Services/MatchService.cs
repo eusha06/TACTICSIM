@@ -20,10 +20,10 @@ public sealed record ResultView(string Winner, int Turns, DateTimeOffset Complet
 public sealed record MissionView(string Type, int? X, int? Y, int HeldRounds, int RequiredRounds,
     int LastEvaluatedComputerTurn, bool FriendlyOccupancy, string Instructions, string? Conclusion);
 public sealed record MatchView(Guid MatchId, long Version, long MatchVersion, string CurrentSide, int TurnNumber,
-    string? Winner, string[] Tiles, UnitView[] Units, HistoryEntry[] History, ResultView[] Results, MissionView? Mission = null);
+    string? Winner, string[] Tiles, UnitView[] Units, HistoryEntry[] History, ResultView[] Results, MissionView? Mission = null, MissionReport? Report = null);
 public sealed record MatchSummary(Guid MatchId, long MatchVersion, int TurnNumber, string? Winner,
     DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, bool IsActive, long EventCount,
-    string MissionType = "Elimination", int HeldRounds = 0, int? ObjectiveX = null, int? ObjectiveY = null);
+    string MissionType = "Elimination", int HeldRounds = 0, int? ObjectiveX = null, int? ObjectiveY = null, int FriendlySurvivors = 0, int FriendlyTotal = 0, int CompletedRounds = 0);
 // Optional command-only presentation. GET/Resume never replay old events.
 public sealed record ActionFrame(string CurrentSide, int TurnNumber, string? Winner,
     UnitView[] Units, MissionView Mission);
@@ -67,7 +67,8 @@ public sealed class MatchService(MatchDbContext db)
             .OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id)
             .Select(m => new MatchSummary(m.Id, m.Version, m.TurnNumber, m.Winner == null ? null : m.Winner.ToString(),
                 m.CreatedAt, m.UpdatedAt, m.Id == active, m.LastEventSequence, m.Mission.ToString(),
-                m.HeldRounds, m.ObjectiveX, m.ObjectiveY)).ToListAsync(ct);
+                m.HeldRounds, m.ObjectiveX, m.ObjectiveY, m.Units.Count(u => u.Side == Side.Human && u.Health > 0),
+                m.Units.Count(u => u.Side == Side.Human), (m.TurnNumber - 1) / 2)).ToListAsync(ct);
     }
 
     public async Task<ServiceReply> Execute(Guid owner, MatchCommand command, CancellationToken ct)
@@ -277,7 +278,7 @@ public sealed class MatchService(MatchDbContext db)
             game.Winner?.ToString(), MapTiles.Select(t => t.ToString()).ToArray(),
             game.Units.Select(u => UnitInfo(game, u)).ToArray(),
             saved.Events.OrderBy(e => e.Sequence).Select(e => new HistoryEntry(e.Turn, e.Side.ToString(), e.Text, e.Sequence)).ToArray(),
-            results.OrderByDescending(r => r.CompletedAt).Take(10).ToArray(), MissionInfo(game));
+            results.OrderByDescending(r => r.CompletedAt).Take(10).ToArray(), MissionInfo(game), MissionReport.From(game));
     }
 
     private static UnitView UnitInfo(Game game, Unit u, bool includeLegalActions = true) =>

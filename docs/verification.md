@@ -1,3 +1,36 @@
+# Release 5 verification — 2026-11-02
+
+Implementation checks observed locally:
+- Release build with warnings as errors: zero warnings/errors.
+- 112 .NET tests passed: 87 engine and 25 real PostgreSQL tests, including
+  four new report/restoration/history/old-receipt checks.
+- 16 tutorial/presentation tests passed; JavaScript syntax and Python compile checks.
+- EF reports no pending model changes. No migration, rule or database reset.
+- Full HTTP security/gameplay suite and Rivergate win/defeat suite passed.
+  Mission reports asserted against saved rounds, units and capture state.
+- Read-only usability check passed: pages, internal links, assets and SVG symbols
+  load, removed vendor path is 404, no template/debug copy, reads create no match.
+- Documentation links and all three real screenshot PNG files checked.
+
+Local Chrome evidence: first-visit welcome/preview, keyboard select/move and Tab
+from board to End Turn, real combat and completed capture. At turn 15, refresh
+and History/Resume retained 1/2 capture; turn 17 reported eight completed rounds,
+one of three friendly survivors, zero opposing survivors and secured 2/2.
+A real local server restart retained the completed result. Original screenshots
+are in `docs/screenshots`. Desktop and 375×667 mobile report inspected; Console
+showed zero messages. Mobile emulation clicks intermittently failed with native
+`noWindowsAvailable`; the fixed command bar and fresh mobile interactions require
+further inspection. No physical-device or comprehensive accessibility audit claimed.
+
+Deployment checks are recorded in the current release checklist after they occur.
+Before Release 5 deployment, Render /health was healthy at
+`2fcf0975b74ebd1da185a872a414aab1a924af5e`. The Render page showed successful
+manual deployment `dep-dbk5oa1srm7s739al4tg` at 15:47:20 Asia/Dhaka on 2026-11-02,
+Production startup and no pending migrations. This confirms Release 4 runtime
+availability; it does not retroactively complete every earlier live acceptance item.
+
+---
+
 # Verification record
 
 ## Release 4 deployment status (2026-11-02)

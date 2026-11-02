@@ -3,31 +3,31 @@
 @{
     ViewData["Title"] = "Match history";
 }
-<div class="game-shell">
+<div class="game-shell history-shell">
     <div class="page-heading">
         <div><p class="eyebrow">YOUR OPERATIONS</p><h1>Match history<span>.</span></h1><p class="intro">Resume unfinished matches or review your squad's past operations in this browser.</p></div>
         <a class="button secondary" asp-page="/Index">Back to battlefield</a>
     </div>
     @if (Model.ErrorMessage is not null)
     {
-        <div class="error-banner" role="alert">@Model.ErrorMessage</div>
+        <div class="error-banner" role="alert">@Model.ErrorMessage <a asp-page="/History">Try again</a></div>
     }
     <section class="panel match-history" aria-label="Your matches">
-        @if (Model.Matches.Count == 0)
+        @if (Model.Matches.Count == 0 && Model.ErrorMessage is null)
         {
-            <h2>No saved matches yet.</h2><p class="empty-state">Start a match on the battlefield. Progress is saved after each accepted command.</p>
+            <div class="history-empty"><p class="eyebrow">A FRESH START</p><h2>No saved matches yet.</h2><p class="empty-state">Begin an operation from the briefing. Progress is saved after every accepted command in this browser.</p><a class="button primary" asp-page="/Index">Open briefing</a></div>
         }
         @foreach (var match in Model.Matches)
         {
             <article class="match-row" data-match-id="@match.MatchId">
                 <div>
                     <h2>Operation @match.MatchId.ToString("N")[..8] @if (match.IsActive) { <span class="subtle-badge">Current</span> }</h2>
-                    <p class="match-meta">@match.CreatedAt.ToString("yyyy-MM-dd HH:mm 'UTC'") · Turn @match.TurnNumber · @match.EventCount history entries</p>
+                    <p class="match-meta">@match.CreatedAt.ToString("yyyy-MM-dd HH:mm 'UTC'") · @match.CompletedRounds completed rounds · @match.FriendlySurvivors/@match.FriendlyTotal friendly units surviving</p>
                     <p class="match-meta">@(match.MissionType == "Rivergate" ? $"Rivergate · Hold the outpost: {match.HeldRounds}/2 rounds · {(char)('A' + match.ObjectiveX!.Value)}{match.ObjectiveY!.Value + 1}" : "Legacy elimination · Defeat the opposing squad")</p>
                     <p class="match-status">@(match.Winner is null ? "In progress" : match.Winner == "Human" ? "Victory" : "Defeat")</p>
                 </div>
                 <div class="match-actions">
-                    <a class="button secondary" asp-page="/History" asp-route-matchId="@match.MatchId">Review</a>
+                    <a class="button secondary" asp-page="/History" asp-route-matchId="@match.MatchId">Review<span class="visually-hidden"> operation @match.MatchId.ToString("N")[..8]</span></a>
                     @if (match.Winner is null)
                     {
                         <form method="post" asp-page-handler="Resume">
@@ -36,7 +36,7 @@
                             <input type="hidden" name="CurrentMatchId" value="@Model.CurrentState?.MatchId" />
                             <input type="hidden" name="ExpectedMatchVersion" value="@Model.CurrentState?.MatchVersion" />
                             <input type="hidden" name="TargetMatchId" value="@match.MatchId" />
-                            <button class="button primary" type="submit">Resume</button>
+                            <button class="button primary" type="submit">Resume<span class="visually-hidden"> operation @match.MatchId.ToString("N")[..8]</span></button>
                         </form>
                     }
                 </div>
@@ -51,7 +51,14 @@
             <p class="match-status">@(selected.Mission?.Type == "Rivergate" ? $"Rivergate · Hold the outpost: {selected.Mission.HeldRounds}/{selected.Mission.RequiredRounds} rounds · {(char)('A' + selected.Mission.X!.Value)}{selected.Mission.Y!.Value + 1}" : "Legacy elimination match")</p>
             <p class="intro">@selected.Mission?.Instructions</p>
             @if (selected.Mission?.Conclusion is { } conclusion) { <p class="match-status">@conclusion</p> }
-            <div class="table-scroll">
+            @if (selected.Report is { } report)
+            {
+                <section class="mission-report" aria-label="Operation report">
+                    <h3>@report.Outcome</h3><p>@report.RoundDescription</p>
+                    <dl class="report-facts"><div><dt>Your surviving units</dt><dd>@report.FriendlySurvivors / @report.FriendlyTotal</dd></div><div><dt>Opposing survivors</dt><dd>@report.OpposingSurvivors / @report.OpposingTotal</dd></div><div><dt>Capture result</dt><dd>@report.CaptureResult</dd></div></dl>
+                </section>
+            }
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Saved unit state; scroll horizontally on small screens">
                 <table class="unit-table">
                     <thead><tr><th>Side</th><th>Unit</th><th>Position</th><th>Health</th><th>Move used</th><th>Attack used</th></tr></thead>
                     <tbody>

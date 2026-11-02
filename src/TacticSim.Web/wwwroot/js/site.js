@@ -40,6 +40,16 @@
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let selectedId = null;
     let busy = false;
+    let boardFocus = 0;
+    let connectionProblem = !navigator.onLine;
+    let slowRequest = false;
+    let requestTimer;
+    function startRequest() {
+        slowRequest = false;
+        clearTimeout(requestTimer);
+        requestTimer = setTimeout(() => { slowRequest = true; if (!presenting) render(); }, 4000);
+    }
+    function finishRequest() { clearTimeout(requestTimer); slowRequest = false; }
     let pending = null; // Kept after a network failure, so Retry uses the SAME command ID.
     let retryAction = load;
     let loaded = false;
@@ -80,7 +90,8 @@
         if (text !== undefined) node.textContent = text;
         return node;
     }
-    function error(message, retry = load) {
+    function error(message, retry = load, label = "Retry") {
+        byId("retry").textContent = label;
         byId("error-text").textContent = message;
         byId("error").hidden = false;
         retryAction = retry;
@@ -93,29 +104,33 @@
             try { saved = JSON.parse(preference("localStorage", `tacticsim.tutorial.${state.matchId}`)); } catch { /* Start fresh. */ }
             tutorial = new Tutorial(state.matchId, saved, preference("localStorage", "tacticsim.tutorial.dismissed") === "1");
         }
-        if (!state.winner) continueMatch = { matchId: state.matchId, turnNumber: state.turnNumber };
+        if (!state.winner) continueMatch = { matchId: state.matchId, turnNumber: state.turnNumber, missionType: state.mission?.type ?? "Elimination" };
         if (!state.units.some(u => u.id === selectedId && u.health > 0)) selectedId = null;
     }
     async function load() {
         if (busy) return;
         if (pending) return submit();
         busy = true;
+        startRequest();
         byId("error").hidden = true;
         render();
         try {
             const response = await fetch(app.dataset.stateUrl, { credentials: "same-origin", cache: "no-store" });
             const data = await response.json();
             if (response.status === 401) {
-                error(data.error, () => location.reload());
+                error(data.error, () => location.reload(), "Reload page");
                 return;
             }
             if (!response.ok) throw new Error(data.error || "Could not retrieve the battlefield.");
+            connectionProblem = false;
             accept(data.state);
             continueMatch = data.continueMatch ?? null;
             loaded = true;
-        } catch (failure) {
-            error(failure.message || "Connection lost. Retry to retrieve your saved match.");
+        } catch {
+            connectionProblem = true;
+            error("Could not connect. Your last saved board is unchanged. Reconnect, then Retry.");
         } finally {
+            finishRequest();
             busy = false;
             render();
         }
@@ -137,6 +152,7 @@
         // afterwards so keyboard users can continue with arrows/Enter.
         const commandCell = document.activeElement?.dataset.cell;
         busy = true;
+        startRequest();
         byId("error").hidden = true;
         render();
         let refresh = false;
@@ -148,7 +164,7 @@
             });
             if (!response.headers.get("content-type")?.includes("application/json")) {
                 pending = null;
-                error("Your session token expired. Reload this page and try again.", () => location.reload());
+                error("Your session expired. Reload the page to reconnect to your saved operation.", () => location.reload(), "Reload page");
                 return;
             }
             const data = await response.json();
@@ -159,6 +175,7 @@
             refresh = !!data.state && !!state && data.state.version < state.version;
             const acceptedCommand = pending;
             const before = state;
+            connectionProblem = false;
             accept(data.state);
             if (response.ok && !refresh) {
                 tutorial?.accepted(acceptedCommand, data.state);
@@ -172,8 +189,10 @@
             pending = null;
             if (!response.ok) error(data.error || "That action could not be completed.", response.status === 401 ? () => location.reload() : load);
         } catch {
+            connectionProblem = true;
             error("Connection interrupted. Retry this command safely; it will only apply once.", submit);
         } finally {
+            finishRequest();
             busy = false;
             render();
         }
@@ -215,7 +234,7 @@
                 : batch.steps.some(step => step.side === "Computer") ? "Opponent finished. Your turn." : batch.steps.at(-1).text);
             render();
             // submit() unlocks controls next; preserve a keyboard landing point.
-            if (hadSkipFocus) byId(after.winner ? "victory" : "play-title").focus({ preventScroll: true });
+            if (hadSkipFocus) byId(after.winner ? after.report ? "report-title" : "victory" : "play-title").focus({ preventScroll: true });
         }
     }
     function effect(node, frames, duration, signal) {
@@ -236,9 +255,10 @@
             const moving = original.cloneNode(true);
             const bounds = board.getBoundingClientRect();
             const origin = cellNode(step.route[0]).getBoundingClientRect();
+            const tokenBounds = original.getBoundingClientRect();
             moving.classList.add("moving-token");
-            Object.assign(moving.style, { left: `${origin.left - bounds.left - board.clientLeft}px`,
-                top: `${origin.top - bounds.top - board.clientTop}px`, width: `${origin.width}px`, height: `${origin.height}px` });
+            Object.assign(moving.style, { left: `${tokenBounds.left - bounds.left - board.clientLeft}px`,
+                top: `${tokenBounds.top - bounds.top - board.clientTop}px`, width: `${tokenBounds.width}px`, height: `${tokenBounds.height}px` });
             layer.append(moving); board.append(layer); original.style.opacity = "0";
             try {
                 // Geometry only: every waypoint was chosen by the engine's actual search.
@@ -256,7 +276,7 @@
             if (!target || !after || !tokenNode) return;
             const targetCell = cellNode(target);
             const impact = element("span", "damage-feedback", `−${step.damage}${step.destroyed ? " · destroyed" : ""}`);
-            impact.setAttribute("aria-hidden", "true"); targetCell.append(impact);
+            impact.setAttribute("aria-hidden", "true"); targetCell.classList.add("impact-cell"); targetCell.append(impact);
             const hp = tokenNode.querySelector(".unit-hp");
             if (hp) hp.textContent = `${after.health}/${after.maxHealth}`;
             try {
@@ -267,7 +287,7 @@
                     effect(impact, [{ opacity: 1 }, { opacity: 1, offset: .8 }, { opacity: 0 }], duration, signal),
                     step.destroyed ? effect(tokenNode, [{ opacity: 1 }, { opacity: .8, offset: .5 }, { opacity: 0 }], duration, signal) : Promise.resolve()
                 ]);
-            } finally { impact.remove(); }
+            } finally { impact.remove(); targetCell.classList.remove("impact-cell"); }
         } else {
             await new Promise(resolve => {
                 if (signal.aborted) return resolve();
@@ -281,6 +301,12 @@
     function render() {
         const shown = display ?? state;
         const locked = busy || !!pending;
+        app.classList.toggle("playing", playing);
+        app.classList.toggle("operation-complete", !!shown?.winner && !presenting);
+        byId("connection-status").hidden = !connectionProblem;
+        byId("connection-status").textContent = !navigator.onLine
+            ? "Offline. Your last saved board is shown. Reconnect, then Retry."
+            : "Connection interrupted. Retry to confirm your saved operation.";
         byId("welcome").hidden = playing;
         byId("play-area").hidden = !playing;
         byId("begin-operation").disabled = locked || !loaded;
@@ -288,7 +314,7 @@
         byId("continue-operation").hidden = !continueMatch;
         byId("continue-operation").disabled = locked || !loaded;
         byId("continue-operation").textContent = continueMatch ? `Continue Operation · Turn ${continueMatch.turnNumber}` : "Continue Operation";
-        byId("welcome-status").textContent = busy ? "Retrieving your operation…" : !loaded ? "Connect to check your saved operation." :
+        byId("welcome-status").textContent = busy ? slowRequest ? "Still connecting. The free demo may need a minute to wake up." : pending ? "Saving your command…" : "Checking for saved operations…" : !loaded ? "Connect to check your saved operation." :
             continueMatch ? "An unfinished operation is ready. Begin starts a separate match; your saves stay in Match history." :
             shown?.winner ? "Your last operation is complete. Begin again or review your saved matches." : "Ready when you are. Begin Operation starts your first match.";
         byId("help-objective").textContent = playing && shown?.mission ? shown.mission.instructions :
@@ -323,6 +349,7 @@
             const outpost = capture && mission.x === x && mission.y === y;
             const cell = element("button", `cell ${terrain.toLowerCase()}`);
             cell.type = "button";
+            cell.tabIndex = index === boardFocus ? 0 : -1;
             cell.dataset.cell = String(index);
             cell.disabled = locked;
             if (outpost) cell.classList.add("outpost", unit ? "occupied-objective" : "empty-objective");
@@ -362,15 +389,34 @@
         byId("turn-number").textContent = `T${String(shown.turnNumber).padStart(2, "0")}`;
         byId("turn-description").textContent = shown.winner ? "Start a fresh operation when you're ready." : busy ? "Saving your command…" : "Move your squad, pick your targets, hold the ground.";
         byId("board-hint").textContent = shown.winner ? "Operation complete" : selected ? `${selected.type} #${selected.id} selected${actionable ? " · choose a cell or target" : " · opponent unit"}` : "Select a blue unit to begin";
-        byId("victory").hidden = presenting || !shown.winner;
+        byId("victory").hidden = presenting || !shown.winner || !!shown.report;
+        byId("victory").classList.toggle("failure", shown.winner === "Computer");
         if (shown.winner) {
             byId("victory").replaceChildren(element("b", "", capture ? shown.winner === "Human" ? "Mission success." : "Mission failed." : shown.winner === "Human" ? "Victory. The field is yours." : "Defeat. Your squad was eliminated."), document.createTextNode(`${mission?.conclusion ?? ""} Completed on turn ${shown.turnNumber}.`));
         }
+        renderReport(shown);
         renderDetails(selected);
         renderSquad();
         renderHistory();
         renderTutorial(selected, locked);
     }
+    function renderReport(shown) {
+        const report = shown.report;
+        byId("mission-report").hidden = presenting || !shown.winner || !report;
+        if (!report) return; // Older retry receipts did not contain report metadata.
+        byId("mission-report").classList.toggle("failure", shown.winner === "Computer");
+        byId("report-title").textContent = report.outcome;
+        byId("report-round-note").textContent = `${shown.mission?.conclusion ?? ""} ${report.roundDescription}`;
+        const facts = byId("report-facts"); facts.replaceChildren();
+        for (const [label, value] of [["Completed rounds", report.completedRounds],
+            ["Your surviving units", `${report.friendlySurvivors} / ${report.friendlyTotal}`],
+            ["Opposing survivors", `${report.opposingSurvivors} / ${report.opposingTotal}`],
+            ["Capture result", report.captureResult]]) {
+            const row = element("div", ""); row.append(element("dt", "", label), element("dd", "", value)); facts.append(row);
+        }
+        byId("report-history").href = `${app.dataset.historyUrl}?matchId=${encodeURIComponent(shown.matchId)}`;
+    }
+
     function renderTutorial(selected, locked) {
         const active = !presenting && playing && tutorial && tutorial.step < 3;
         byId("tutorial").hidden = !active;
@@ -514,14 +560,26 @@
     byId("cancel-new").addEventListener("click", () => byId("new-dialog").close());
     byId("confirm-new").addEventListener("click", () => { byId("new-dialog").close(); selectedId = null; command("new"); });
     byId("retry").addEventListener("click", () => retryAction());
+    board.addEventListener("focusin", event => {
+        const index = Number(event.target.dataset.cell);
+        if (!Number.isInteger(index)) return;
+        boardFocus = index;
+        for (const cell of board.querySelectorAll("[data-cell]")) cell.tabIndex = Number(cell.dataset.cell) === index ? 0 : -1;
+    });
+    window.addEventListener("offline", () => { connectionProblem = true; if (!presenting) render(); });
+    window.addEventListener("online", () => {
+        // Retrying a pending mutation remains an explicit action with its original ID.
+        if (!pending && !busy) load();
+        else if (!presenting) render();
+    });
     board.addEventListener("keydown", event => {
         if (presenting || busy || pending) return;
         if (event.key === "Escape") { selectedId = null; render(); return; }
         const index = Number(event.target.dataset.cell);
         if (!Number.isInteger(index)) return;
         const x = index % 8, y = Math.floor(index / 8);
-        const next = { ArrowLeft: x > 0 ? index - 1 : index, ArrowRight: x < 7 ? index + 1 : index, ArrowUp: y > 0 ? index - 8 : index, ArrowDown: y < 7 ? index + 8 : index }[event.key];
-        if (next !== undefined) { event.preventDefault(); board.querySelector(`[data-cell="${next}"]`)?.focus(); }
+        const next = { Home: event.ctrlKey ? 0 : y * 8, End: event.ctrlKey ? 63 : y * 8 + 7, ArrowLeft: x > 0 ? index - 1 : index, ArrowRight: x < 7 ? index + 1 : index, ArrowUp: y > 0 ? index - 8 : index, ArrowDown: y < 7 ? index + 8 : index }[event.key];
+        if (next !== undefined) { event.preventDefault(); boardFocus = next; board.querySelector(`[data-cell="${next}"]`)?.focus(); }
     });
     document.addEventListener("visibilitychange", () => { if (document.hidden && presenting) presentation.skip(); if (!document.hidden && !busy && !pending) load(); });
     load();

@@ -51,6 +51,11 @@ def main():
     assert state["winner"] == "Human" and state["mission"]["heldRounds"] == 2
     assert state["mission"]["lastEvaluatedComputerTurn"] == 16
     assert state["mission"]["conclusion"].startswith("Outpost secured")
+    report = state["report"]
+    assert report["outcome"] == "Mission success" and report["completedRounds"] == 8
+    assert (report["friendlySurvivors"], report["friendlyTotal"], report["opposingSurvivors"]) == (1, 3, 0)
+    assert report["captureResult"] == "Secured · 2/2 rounds"
+    assert report["roundDescription"] == "8 completed rounds."
     assert sum(u["health"] == 0 for u in state["units"] if u["side"] == "Human") == 2
     assert sum("Outpost held after completed round" in e["text"] for e in state["history"]) == 2
     print("PASS: real Rivergate victory, enemy contests F4/two friendly losses, elimination requires capture, 0→1→2 after computer rounds")
@@ -72,6 +77,9 @@ def main():
     assert lost["winner"] == "Computer", "Reckless example should produce a real defeat"
     assert lost["mission"]["heldRounds"] == 0 and lost["mission"]["conclusion"] == "Your squad was eliminated."
     assert all(u["health"] == 0 for u in lost["units"] if u["side"] == "Human")
+    assert lost["report"]["completedRounds"] == (lost["turnNumber"] - 1) // 2
+    assert lost["report"]["friendlySurvivors"] == 0 and lost["report"]["outcome"] == "Mission failed"
+    assert "Ended during round" in lost["report"]["roundDescription"]
     print("PASS: reckless advance loses the entire squad; mission failure resets capture and locks actions")
     print(json.dumps({"winningMatch": state["matchId"], "winningTurn": state["turnNumber"], "losingMatch": lost["matchId"], "losingTurn": lost["turnNumber"]}))
 

@@ -24,6 +24,7 @@ import uuid
 
 import verify_web as web
 import verify_mission as mission
+import verify_usability as usability
 
 
 def docker(*arguments, **kwargs):
@@ -167,6 +168,7 @@ def main():
             connection.close()
             print("PASS: Production PORT binding, non-root user, HTTP redirect, TLS proxy scheme, Secure/HttpOnly owner cookie and HSTS")
             web.main()
+            usability.main()
             mission.main()  # Capture, reset, defeat and saved progress through HTTP.
             state = browser.command(None, "new")
             state = browser.command(state, "move", unitId=1, x=0, y=2)

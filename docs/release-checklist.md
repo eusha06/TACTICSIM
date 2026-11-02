@@ -1,6 +1,21 @@
 # Operation Rivergate — release checklist
 
-## Release 4 — restrained action presentation (current)
+## Release 5 — portfolio and final usability (current)
+
+- Starting commit `2fcf0975b74ebd1da185a872a414aab1a924af5e`, main.
+- Existing free Render service `srv-dbjis38ae00c73ec5vl0`,
+  https://tacticsim.onrender.com/, Prisma PostgreSQL and persistent cookie keys.
+- Hosted health observed 200/healthy at starting commit on 2026-11-02.
+- [x] Read instructions/docs and inspect implementation, saved data and hosting.
+- [x] Real-map welcome preview, first-time guidance and factual mission report.
+- [x] Implement history/resume, empty/loading/error/offline and mobile controls.
+- [x] Remove unused templates/assets; README, actual screenshots, demo/CV text.
+- [x] Automated checks, local desktop play/mobile report, assets/links/console/error hygiene.
+  Mobile emulation input is intermittent; fixed command bar interaction remains a manual check.
+- [ ] Push/green CI, deploy exact source, verify live gameplay and save continuity.
+- [ ] Record evidence and limitations; stop after Release 5.
+
+## Release 4 — restrained action presentation (historical gate)
 
 - Starting commit `6343c271d5b638944e5847b4981a319dea94a58b`, branch `main`.
 - Target: existing free Render `srv-dbjis38ae00c73ec5vl0`,

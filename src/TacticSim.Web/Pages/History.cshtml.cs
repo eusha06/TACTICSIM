@@ -75,7 +75,7 @@ public class HistoryModel(BrowserOwner owner, MatchService matches, ILogger<Hist
     {
         logger.LogError(exception, "Could not access match history");
         Response.StatusCode = 503;
-        ErrorMessage = "Match history is unavailable. Check PostgreSQL and apply the database migrations, then refresh.";
+        ErrorMessage = "Your saved operations are temporarily unavailable. Please refresh in a moment.";
         return Page();
     }
 }

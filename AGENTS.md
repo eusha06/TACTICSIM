@@ -52,7 +52,20 @@
 
 A test, deployment, or browser check is only marked passed after observing its result. Historical results in `docs/verification.md` are evidence for that earlier revision, not a substitute for checking a new release. The Development restart script now targets Release binaries. `scripts/verify_deployment.py` separately checks a Production container through a local TLS edge and replaces that container; neither is proof of a deployed Render service.
 
-## Release 4 authorization
+## Release 5 authorization
+
+- Release 5 is authorized: portfolio presentation and final usability only.
+  Refine real-map welcome preview, instructions, recorded mission reports,
+  history/resume, loading/error/offline states and accessible mobile controls.
+- Preserve all rules, missions, saves, animation/security boundaries and the free
+  Render/Prisma deployment. Derive reports from saved unit/turn/mission state;
+  no invented scores, completion times or simulation-accuracy claims.
+- Remove safe unused templates/assets. Update README with actual screenshots,
+  stack/setup/architecture/limitations; add a 60-second demo and factual CV text.
+- Verify assets/links, production error hygiene, keyboard/reduced motion and
+  deployed commit. Record any real access blocker. Stop after Release 5.
+
+## Release 4 authorization (implementation complete)
 
 - Release 4 is authorized: restrained route-based movement, attack/damage/health/
   destruction feedback, ordered opponent actions, concise mission outcome.

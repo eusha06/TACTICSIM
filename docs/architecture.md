@@ -183,3 +183,23 @@ reduced motion, resize, hidden tabs and effect failures settle on the final
 saved state; a hard deadline also releases a stalled effect. Browser refresh
 reads the already committed state, never resubmits an animation. Failed network
 requests retain the original pending command ID for safe retry.
+
+## Release 5 presentation boundary
+
+The read-only `MissionReport` derives outcome, completed rounds, surviving unit
+counts and capture result from restored Core state. Completed rounds are
+`(TurnNumber - 1) / 2` for the fixed human-first scenario. A victory reached at a
+computer-round boundary counts that completed round; elimination during either
+side's turn labels the interrupted round explicitly. No score, duration or new
+saved counter is invented. Optional appended report metadata preserves older
+retry receipts; refresh always reads the full current report. History counts
+living saved units with an owner-scoped SQL projection. No migration is needed.
+
+The welcome preview renders `Game.CreateRivergate()` data without creating a
+saved game or issuing a command. The report is the single completion summary.
+Roving board focus keeps one board tab stop, arrows/Home/End navigate geometry,
+and the narrow-screen command post keeps the actual End Turn control visible.
+Offline/loading messages never advance the tutorial or change pending command
+IDs. Unused scaffold libraries/validation partial/default favicon were removed;
+Error and Privacy now contain specific, factual product information. Provider
+errors remain logged privately and generic in production responses.

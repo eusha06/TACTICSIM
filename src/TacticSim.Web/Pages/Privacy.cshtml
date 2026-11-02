@@ -1,8 +1,11 @@
-﻿@page
+@page
 @model PrivacyModel
-@{
-    ViewData["Title"] = "Privacy Policy";
-}
-<h1>@ViewData["Title"]</h1>
-
-<p>Use this page to detail your site's privacy policy.</p>
+@{ ViewData["Title"] = "Browser and save data"; }
+<div class="game-shell message-page">
+    <p class="eyebrow">YOUR SAVED OPERATIONS</p><h1>Browser &amp; save data.</h1>
+    <p>TacticSim uses a protected anonymous cookie to find the operations saved for this browser. There is no account or login.</p>
+    <p>Matches, unit state, accepted commands and action history are stored in PostgreSQL. The cookie normally lasts up to 30 days. Clearing cookies, private browsing ending, or changing browsers can remove access to those saves.</p>
+    <p>Tutorial preferences are stored locally in your browser. They do not control match ownership or game rules. This app includes no advertising or analytics scripts; hosting infrastructure may retain request metadata and service logs.</p>
+    <p>New Match preserves earlier operations. Use Match history to review them or resume an unfinished one.</p>
+    <a class="button primary" asp-page="/Index">Back to briefing</a><a class="button secondary" asp-page="/History">Match history</a>
+</div>

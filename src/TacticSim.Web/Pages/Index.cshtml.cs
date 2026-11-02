@@ -12,6 +12,8 @@ public class IndexModel(BrowserOwner owner, MatchService matches, ILogger<IndexM
 {
     public void OnGet() => owner.EnsureCookie(HttpContext);
 
+    public Game Preview { get; } = Game.CreateRivergate();
+
     public IReadOnlyList<Unit> GuideUnits { get; } = Game.CreateDefault().Units.Where(u => u.Side == Side.Human).ToArray();
     public Terrain[] GuideTerrains { get; } = Enum.GetValues<Terrain>();
     public int Defense(Terrain terrain)
@@ -57,7 +59,7 @@ public class IndexModel(BrowserOwner owner, MatchService matches, ILogger<IndexM
         catch (Exception exception) when (exception is NpgsqlException or DbUpdateException)
         {
             logger.LogError(exception, "Could not access match storage");
-            return new JsonResult(new { error = "Match storage is unavailable. Check PostgreSQL and apply the database migrations, then retry." }) { StatusCode = 503 };
+            return new JsonResult(new { error = "Your operation is temporarily unavailable. Your last saved actions are safe. Please retry in a moment." }) { StatusCode = 503 };
         }
     }
 }

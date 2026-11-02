@@ -6,17 +6,18 @@
     <meta name="theme-color" content="#111b20" />
     <meta name="description" content="TacticSim: a small, deterministic tactical game. Command your squad on an 8 by 8 battlefield." />
     <title>@ViewData["Title"] · TacticSim</title>
+    <link rel="icon" type="image/svg+xml" href="~/art/favicon.svg" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
-    <a class="skip-link" href="#main">Skip to battlefield</a>
+    <a class="skip-link" href="#main">Skip to content</a>
     <header class="topbar">
         <a class="brand" asp-page="/Index"><span class="brand-mark" aria-hidden="true">▦</span> TACTIC<span>SIM</span></a>
         <nav class="main-nav" aria-label="Primary"><a asp-page="/Index">Battlefield</a><a asp-page="/History">Match history</a></nav>
-        <span class="edition">FIELD EDITION <b>01</b></span>
+        <span class="edition">A FICTIONAL TACTICAL GAME</span>
     </header>
-    <main id="main">@RenderBody()</main>
-    <footer class="site-footer"><span>TACTICS, WITHOUT THE CHANCE.</span><span>A fictional tactical simulation · C# / .NET</span></footer>
+    <main id="main" tabindex="-1">@RenderBody()</main>
+    <footer class="site-footer"><span>TACTICS, WITHOUT THE CHANCE.</span><span>A fictional game · C# / .NET</span><a asp-page="/Privacy">Browser &amp; save data</a><a href="https://github.com/eusha06/TACTICSIM">Source code</a></footer>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -468,6 +468,8 @@
     }
 
     document.addEventListener("keydown", event => {
+        if (event.repeat && ["Enter", " "].includes(event.key) && app.contains(event.target))
+            event.preventDefault();
         if (event.key === "Escape" && presenting) {
             event.preventDefault(); presentation.skip();
         }
@@ -503,7 +505,11 @@
     }
     byId("tutorial-skip").addEventListener("click", dismissTutorial);
     byId("tutorial-done").addEventListener("click", () => { if (tutorial.step === 2) dismissTutorial(); });
-    byId("end-turn").addEventListener("click", () => command("endTurn"));
+    byId("end-turn").addEventListener("click", event => {
+        // A double-click is one intention, including when reduced motion and a
+        // very quick response let the first command finish before click two.
+        if (event.detail <= 1) command("endTurn");
+    });
     byId("new-match").addEventListener("click", () => state ? byId("new-dialog").showModal() : command("new"));
     byId("cancel-new").addEventListener("click", () => byId("new-dialog").close());
     byId("confirm-new").addEventListener("click", () => { byId("new-dialog").close(); selectedId = null; command("new"); });

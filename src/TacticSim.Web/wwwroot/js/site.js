@@ -502,7 +502,7 @@
         const shown = display ?? state;
         const history = byId("history");
         history.replaceChildren();
-        byId("history-count").textContent = `${shown.history.length} entries`;
+        byId("history-count").textContent = `${shown.history.length} ${shown.history.length === 1 ? "entry" : "entries"}`;
         for (const entry of [...shown.history].reverse()) {
             const row = element("li", "history-entry");
             row.append(element("span", "history-turn", `T${String(entry.turn).padStart(2, "0")}`), element("span", `history-dot ${entry.side.toLowerCase()}`), element("span", "", entry.text));

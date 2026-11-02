@@ -8,10 +8,63 @@
 - [x] Inspect engine/routes, event/receipt persistence, board rendering and host.
 - [x] Expose actual routes and authoritative ordered frames, preserve old receipts.
 - [x] Add short movement/attack/health/destruction feedback and ordered opponent turn.
-- [ ] Lock input, handle retries/refresh/rapid input, reduced motion and Skip.
-- [ ] Automated route/frame, persistence/security and presentation checks; browser desktop/mobile.
-- [ ] Push, green CI, deploy exact source and verify old saves and live interactions.
+- [x] Lock input, safe retry/refresh, reduced motion, Skip/Escape and repeated-activation guard.
+- [x] Automated route/frame, persistence/security and presentation checks; local browser desktop/mobile.
+- [x] Push verified source and observe green CI.
+- [ ] Deploy exact source and verify old saves and live interactions.
 - [ ] Record evidence/manual checklist; stop after Release 4.
+
+Implementation source: `bf5f11d3a4df276ae4f428dc00ac33348460e8d7`
+(after `137ff619928c1c10c819ada1df8aebab98bf0c88`).
+[Final source CI passed](https://github.com/eusha06/TACTICSIM/actions/runs/41420556070):
+108 .NET tests (87 Core, 21 PostgreSQL), 16 tutorial/presentation tests,
+migration/model/publish, production Docker/TLS, actual mission win/defeat,
+security/isolation/concurrent commands and container replacement/outage checks.
+Release build has zero warnings/errors. No new migration or EF model changes.
+
+Local Chrome evidence: animation inspector recorded movement and attack effects;
+Armor F2→F3 with deliberately slowed playback was skipped with Escape, retaining
+the accepted destination. Attack reported six damage and changed target HP
+16→10. Emulated 375×667 layout inspected. Reduced-motion emulation displayed the
+completed opponent turn immediately with correct deaths/health. DevTools Offline
+left Artillery at D2, E1 empty and input locked; restoring connectivity and Retry
+moved to E1 once, increasing history from 24 to 25 entries. Final source also
+ignores double-clicked End Turn and held activation keys; that last browser input
+case remains unobserved after desktop automation failed. Automated backend
+concurrency and presentation cancellation checks passed.
+
+Deployment is pending, not complete. Public /health still reported Release 3
+`dfe0495ec1c467733ddd6518fba5c76c60050d9a` during pre-upgrade capture. Browser
+access initially failed with `cgWindowNotFound`; the user reopened Chrome/Render.
+The page then became readable, but input failed/missed with
+`windowNotFoundAtPosition` and invalid element IDs, including after rebinding.
+No working Render connector/CLI/deploy hook is configured. A manual deployment
+was requested; no deployment success or Release 4 live check is claimed.
+
+A pre-R4 Rivergate match, its used move, original receipt and owner cookie were
+recorded privately for exact postdeployment comparison. Historical temporary
+pre-Release-1 cookie fixtures no longer exist in this session; legacy/imported
+snapshot and old-receipt behavior are covered by PostgreSQL tests. No production
+schema, cookie purpose/key storage, credentials or existing matches were reset.
+No sound or subsequent release was added.
+
+Manual deployment and acceptance:
+1. In [the existing service](https://dashboard.render.com/web/srv-dbjis38ae00c73ec5vl0),
+   choose Manual Deploy → Deploy a specific commit. Paste
+   `bf5f11d3a4df276ae4f428dc00ac33348460e8d7`, select its row, Deploy commit.
+   Keep the current free compute, environment variables and Docker command.
+2. Wait for Deploy succeeded | Live. Open https://tacticsim.onrender.com/health;
+   require healthy and that exact revision. No migration should be newly applied.
+3. Continue an existing game. Move along land, attack a target, End Turn; watch
+   ordered opponent actions, actual HP and destruction. Try Skip animation/Esc,
+   refresh during a sequence and History/Resume. No extra action should apply.
+4. Double-click End Turn and hold Enter: only one intended turn should submit.
+   Test reduced motion and a narrow viewport; controls should unlock promptly.
+5. Complete capture or defeat and inspect the concise result. Run the HTTP
+   verification/mission scripts against the live origin and compare the privately
+   recorded pre-upgrade save/receipt before marking this release complete.
+
+Stop after Release 4; deployment/live acceptance remains open.
 
 ## Release 3 — Rivergate capture and hold (complete)
 

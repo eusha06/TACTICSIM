@@ -1,5 +1,17 @@
 # Verification record
 
+## Release 4 deployment status (2026-11-02)
+
+Verified source `bf5f11d3a4df276ae4f428dc00ac33348460e8d7` is pushed to main.
+[CI passed](https://github.com/eusha06/TACTICSIM/actions/runs/41420556070), including
+108 .NET tests, 16 JavaScript tests, production Docker/TLS and replacement,
+mission win/defeat and HTTP/security/frame checks. Deployment is pending browser
+input access: after cgWindowNotFound, the reopened Render page is readable but
+clicks fail/miss (windowNotFoundAtPosition / invalid element IDs). A manual
+specific-commit deploy was requested. The public site still reported Release 3
+before the upgrade; no Release 4 live verification is claimed yet. Exact manual
+steps and remaining checks are in the release checklist.
+
 ## Release 4 local acceptance (2026-11-02)
 
 Release build with warnings as errors passed. Engine 87 and PostgreSQL 21 tests
@@ -17,8 +29,9 @@ and attack effects. With animation playback deliberately slowed, Escape skipped
 Armor F2→F3 and the accepted destination persisted. Armor's attack showed six
 server damage and 16→10 enemy HP. 375×667 layout inspected. Rendering emulation
 of prefers-reduced-motion: reduce showed the completed opponent turn immediately
-without the sequence, with correct deaths/health. Further network/live evidence
-will be recorded after observation in the release checklist.
+without the sequence, with correct deaths/health. DevTools Offline kept a move pending with unchanged positions; Retry after
+restoring connectivity added exactly one event (24→25). Live and final fast-input
+browser checks remain pending the documented desktop input blocker.
 
 ## Live Release 3 acceptance (2026-11-02)
 

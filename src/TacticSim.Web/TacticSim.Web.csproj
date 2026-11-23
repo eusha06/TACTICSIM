@@ -3,6 +3,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.EntityFrameworkCore" Version="10.0.14" />
     <ProjectReference Include="..\TacticSim.Core\TacticSim.Core.csproj" />
+    <ProjectReference Include="..\TacticSim.Sim\TacticSim.Sim.csproj" />
   </ItemGroup>
 
   <ItemGroup>

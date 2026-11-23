@@ -1,5 +1,27 @@
 # Operation Rivergate — release checklist
 
+## Release 6 — TacticSim v2 "Rivergate Command" (in progress)
+
+- Branch `v2-simulation` from `b12ba68` (main, Release 5). Spec: `docs/v2/GAME_DESIGN_AND_ROADMAP.md`.
+- `AGENTS.md` removed at the user's request; its security/data/deploy rules now live in `CLAUDE.md`.
+- Not deployed. Phase 7 deploy needs a verified production backup and the user's go-ahead.
+- [x] Phase 0 — guardrails: branch, CLAUDE.md, spec in `docs/v2/`, baseline build + 112 tests green.
+- [ ] Phase 1 — optional v1 quick wins: skipped (marked optional; v2 replaces the v1 play flow, v1 stays as "Classic").
+- [x] Phase 2 — `TacticSim.Sim` engine + tests + golden vectors (96 tests, 97.5% line coverage).
+- [x] Phase 3 — AI (Recruit/Veteran/Commander) + balance runner; mirrored Veteran 49.6% (see `docs/v2/balance-log.md`).
+- [x] Phase 4 — `/api/v2` + additive `V2Simulation` migration; 11 new PostgreSQL/HTTP tests (ownership, CSRF, idempotency, concurrency, fog leaks, replay determinism, v1 still loads).
+- [x] Phase 5 — Phaser 4 + Vite + TS client at `/play`: map, camera, minimap, planning UX, playback, debrief, menu. Vitest passes all C# golden vectors.
+- [x] Phase 6 — effects, synthesized audio, Boot Camp, rules cards, tips, keyboard/touch, waking screen, after-action report.
+  Browser check (local, built-in browser, 2026-11-23): menu → Boot Camp won in 3 turns (move, previewed attack, capture) →
+  debrief → after-action report → replay of turn 2 → new Rivergate battle vs Veteran (barrage range ring, out-of-reach
+  reasons, AI took A and B on turn 1) → 390 px phone layout. No console errors observed.
+  Not verified: 60 fps on a mid laptop (the preview pane throttles animation while hidden) and a timed first-time player.
+- [ ] Phase 7 — ship. Done locally: Dockerfile Node stage, `.dockerignore` allow-list, CI client typecheck/
+  Vitest/build + golden-vector drift check + balance smoke run, home/nav links to `/play`, README and portfolio.
+  Not done: Docker image build (no local Docker daemon; CI will build it), execution GIF, production backup,
+  migration, Render deploy and live verification. These need the user's go-ahead.
+  Deploy plan with locally rehearsed upgrade, backup/restore and rollback: `docs/v2/deploy-plan.md`.
+
 ## Release 5 — portfolio and final usability (current)
 
 - Starting commit `2fcf0975b74ebd1da185a872a414aab1a924af5e`, main.

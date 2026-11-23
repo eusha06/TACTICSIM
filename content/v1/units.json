@@ -1,0 +1,19 @@
+{
+  "units": [
+    { "id": "rifle", "name": "Rifle Infantry", "short": "RIF", "class": "foot", "hp": 10, "move": 4, "minRange": 1, "maxRange": 2,
+      "atkFoot": 4, "atkVehicle": 2, "vision": 3, "captures": true, "coverMods": { "town": 1, "forest": 1 },
+      "special": "Captures. +1 cover in Town and Forest." },
+    { "id": "at", "name": "Anti-Tank Team", "short": "AT", "class": "foot", "hp": 8, "move": 3, "minRange": 1, "maxRange": 3,
+      "atkFoot": 2, "atkVehicle": 7, "vision": 3, "captures": true,
+      "special": "Captures. Kills armor." },
+    { "id": "armor", "name": "Armor", "short": "ARM", "class": "vehicle", "hp": 18, "move": 5, "minRange": 1, "maxRange": 3,
+      "atkFoot": 6, "atkVehicle": 5, "vision": 3, "captures": true, "coverMods": { "forest": -1, "town": -1 },
+      "special": "Captures. -1 cover in Forest and Town." },
+    { "id": "artillery", "name": "Artillery", "short": "ART", "class": "vehicle", "hp": 9, "move": 3, "minRange": 3, "maxRange": 6,
+      "atkFoot": 6, "atkVehicle": 4, "vision": 2, "captures": false, "indirect": true, "cannotMoveAndFire": true,
+      "special": "Indirect fire at any hex a friendly unit sees. Can't move and fire. Can't capture." },
+    { "id": "recon", "name": "Recon", "short": "REC", "class": "vehicle", "hp": 8, "move": 7, "minRange": 1, "maxRange": 2,
+      "atkFoot": 2, "atkVehicle": 1, "vision": 5, "captures": false,
+      "special": "Sees far and spots for artillery. Can't capture." }
+  ]
+}

@@ -170,6 +170,23 @@ def main():
             web.main()
             usability.main()
             mission.main()  # Capture, reset, defeat and saved progress through HTTP.
+            # v2 Rivergate Command: the canvas page, its bundle and one real turn through /api/v2.
+            status, play, _ = browser.request("/play")
+            assert status == 200, "The v2 /play page is unavailable."
+            game_assets = [html.unescape(path) for path in re.findall(r'(?:src|href)="(/game/[^"]+)"', play)]
+            assert any(".js" in path for path in game_assets) and any(".css" in path for path in game_assets), \
+                "The v2 client bundle is missing from /play (was the Node build stage skipped?)."
+            for path in game_assets:
+                assert browser.request(path)[0] == 200, "Published v2 asset is unavailable: " + path
+            status, created, _ = browser.request("/api/v2/matches", {"scenario": "bootcamp", "difficulty": "Recruit"})
+            assert status == 201, created
+            v2_id = created["match"]["id"]
+            assert all(unit["side"] == "blue" for unit in created["state"]["units"]), "v2 state leaked hidden enemies."
+            v2_turn = {"commandId": str(uuid.uuid4()), "expectedVersion": 1,
+                "orders": [{"unitId": 2, "type": "move", "path": [{"col": col, "row": 2} for col in range(1, 6)]}]}
+            status, played, _ = browser.request(f"/api/v2/matches/{v2_id}/turns", v2_turn)
+            assert status == 200 and len(played["replay"]["ticks"]) == 9, played
+            print("PASS: /play serves the v2 client bundle and a fog-filtered v2 turn resolves through /api/v2")
             state = browser.command(None, "new")
             state = browser.command(state, "move", unitId=1, x=0, y=2)
             state = browser.command(state, "move", unitId=2, x=1, y=3)
@@ -191,6 +208,11 @@ def main():
             assert browser.state() == before
             assert browser.request("/?handler=Command", web.command_payload(before, "move", unitId=3, x=7, y=0))[0] == 422
             print("PASS: container replacement retains owner cookie, damaged health, action flags, exact state/history and duplicate attack receipt")
+            status, again, _ = browser.request(f"/api/v2/matches/{v2_id}")
+            assert status == 200 and again["state"] == played["state"], "v2 match changed across container replacement."
+            status, retried, _ = browser.request(f"/api/v2/matches/{v2_id}/turns", v2_turn)
+            assert status == 200 and retried["replay"] == played["replay"], "A retried v2 turn must return the saved result."
+            print("PASS: v2 match and turn receipt survive container replacement; a retried turn returns the saved result")
             docker("stop", database)
             assert ready()[0] == 503, "Database outage must fail readiness."
             docker("start", database)

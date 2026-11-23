@@ -1,0 +1,9 @@
+{
+  "rulesVersion": "v1",
+  "ticksPerTurn": 8,
+  "holdCover": 1,
+  "roadMarchBonus": 2,
+  "barrageTick": 6,
+  "hillVisionBonus": 1,
+  "minDamage": 1
+}

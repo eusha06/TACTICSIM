@@ -1,0 +1,11 @@
+{
+  "terrain": [
+    { "code": ".", "id": "open", "name": "Open", "footCost": 1, "vehicleCost": 1, "cover": 0, "blocksLos": false },
+    { "code": "=", "id": "road", "name": "Road", "footCost": 1, "vehicleCost": 1, "cover": 0, "blocksLos": false, "road": true },
+    { "code": "F", "id": "forest", "name": "Forest", "footCost": 2, "vehicleCost": 3, "cover": 2, "blocksLos": true },
+    { "code": "H", "id": "hill", "name": "Hill", "footCost": 2, "vehicleCost": 2, "cover": 1, "blocksLos": true, "hill": true },
+    { "code": "T", "id": "town", "name": "Town", "footCost": 1, "vehicleCost": 2, "cover": 3, "blocksLos": true },
+    { "code": "~", "id": "river", "name": "River", "footCost": null, "vehicleCost": null, "cover": 0, "blocksLos": false },
+    { "code": "B", "id": "bridge", "name": "Bridge", "footCost": 1, "vehicleCost": 1, "cover": 0, "blocksLos": false, "road": true }
+  ]
+}

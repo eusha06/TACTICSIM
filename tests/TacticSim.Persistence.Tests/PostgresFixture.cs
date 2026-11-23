@@ -42,6 +42,9 @@ public sealed class PostgresFixture : IDisposable
         }
     }
 
+    /// <summary>Connection string scoped to this fixture's private schema.</summary>
+    public string ConnectionString => _testConnection;
+
     public MatchDbContext Open(params IInterceptor[] interceptors) => new(new DbContextOptionsBuilder<MatchDbContext>()
         .UseNpgsql(_testConnection, options => options.MigrationsHistoryTable("__EFMigrationsHistory", _schema))
         .AddInterceptors(interceptors).Options);

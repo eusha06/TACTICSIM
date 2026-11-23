@@ -1,0 +1,22 @@
+{
+  "name": "tacticsim-client",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "description": "Rivergate Command: Phaser battlefield and DOM HUD for TacticSim v2.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "watch": "vite build --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "phaser": "^4.2.1"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  }
+}

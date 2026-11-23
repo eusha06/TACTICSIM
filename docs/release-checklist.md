@@ -8,7 +8,7 @@
 - [x] Phase 0 — guardrails: branch, CLAUDE.md, spec in `docs/v2/`, baseline build + 112 tests green.
 - [ ] Phase 1 — optional v1 quick wins (skipped: v2 replaces the v1 play flow; v1 stays as "Classic").
 - [x] Phase 2 — `TacticSim.Sim` engine + tests + golden vectors (96 tests, 97.5% line coverage).
-- [ ] Phase 3 — AI + balance runner.
+- [x] Phase 3 — AI (Recruit/Veteran/Commander) + balance runner; mirrored Veteran 49.6% (see `docs/v2/balance-log.md`).
 - [ ] Phase 4 — `/api/v2` + persistence.
 - [ ] Phase 5 — Phaser client, playable battle.
 - [ ] Phase 6 — polish, onboarding, accessibility.

@@ -30,3 +30,12 @@ Ambiguous spec details, the simplest readable choice made, and why.
   the shooter's side could see the victim. Once the match ends, `/state` lifts the fog for the after-action map;
   replays stay fog-filtered.
 - **Debrief** is built from the fog-filtered replay, so it can't mention anything the viewer didn't see.
+- **AI input is a `MatchView`** (the same fog-filtered view a player gets), so the planner can't cheat by
+  construction. Last-seen markers become pseudo-units, except markers on hexes the AI can see right now.
+- **Veteran is not fully deterministic across seeds:** it picks with the match's seeded RNG among candidates
+  within 0.5 points of the best. Same seed + same view = same plan. Without this, 500 mirrored games would
+  be one game played 500 times.
+- **Commander's "top 5 plans"** are the greedy plan plus 4 variants that force the 2nd-best choice for the
+  first 4 assigned units. The 3 "likely responses" are all-Hold, all-Overwatch, and a Veteran plan made from
+  the enemy's view of what Commander knows. Plans score 50% worst case + 50% average.
+- **Boot Camp's opponent** follows `"redScript": "hold"` in the map file: every Red unit Holds.

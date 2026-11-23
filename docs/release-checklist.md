@@ -1,5 +1,19 @@
 # Operation Rivergate — release checklist
 
+## Release 6 — TacticSim v2 "Rivergate Command" (in progress)
+
+- Branch `v2-simulation` from `b12ba68` (main, Release 5). Spec: `docs/v2/GAME_DESIGN_AND_ROADMAP.md`.
+- `AGENTS.md` removed at the user's request; its security/data/deploy rules now live in `CLAUDE.md`.
+- Not deployed. Phase 7 deploy needs a verified production backup and the user's go-ahead.
+- [x] Phase 0 — guardrails: branch, CLAUDE.md, spec in `docs/v2/`, baseline build + 112 tests green.
+- [ ] Phase 1 — optional v1 quick wins (skipped: v2 replaces the v1 play flow; v1 stays as "Classic").
+- [ ] Phase 2 — `TacticSim.Sim` engine + tests + golden vectors.
+- [ ] Phase 3 — AI + balance runner.
+- [ ] Phase 4 — `/api/v2` + persistence.
+- [ ] Phase 5 — Phaser client, playable battle.
+- [ ] Phase 6 — polish, onboarding, accessibility.
+- [ ] Phase 7 — Docker/CI/README (deploy pending user go-ahead).
+
 ## Release 5 — portfolio and final usability (current)
 
 - Starting commit `2fcf0975b74ebd1da185a872a414aab1a924af5e`, main.

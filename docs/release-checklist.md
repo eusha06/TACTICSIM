@@ -9,7 +9,7 @@
 - [ ] Phase 1 — optional v1 quick wins (skipped: v2 replaces the v1 play flow; v1 stays as "Classic").
 - [x] Phase 2 — `TacticSim.Sim` engine + tests + golden vectors (96 tests, 97.5% line coverage).
 - [x] Phase 3 — AI (Recruit/Veteran/Commander) + balance runner; mirrored Veteran 49.6% (see `docs/v2/balance-log.md`).
-- [ ] Phase 4 — `/api/v2` + persistence.
+- [x] Phase 4 — `/api/v2` + additive `V2Simulation` migration; 11 new PostgreSQL/HTTP tests (ownership, CSRF, idempotency, concurrency, fog leaks, replay determinism, v1 still loads).
 - [ ] Phase 5 — Phaser client, playable battle.
 - [ ] Phase 6 — polish, onboarding, accessibility.
 - [ ] Phase 7 — Docker/CI/README (deploy pending user go-ahead).

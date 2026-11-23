@@ -115,6 +115,81 @@ namespace TacticSim.Web.Migrations
                     b.ToTable("MatchCommands", (string)null);
                 });
 
+            modelBuilder.Entity("TacticSim.Web.Data.MatchV2", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AiSeed")
+                        .HasColumnType("integer")
+                        .HasColumnName("ai_seed");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Difficulty")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("difficulty");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<string>("RulesVersion")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("rules_version");
+
+                    b.Property<string>("Scenario")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("scenario");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("status");
+
+                    b.Property<int>("Turn")
+                        .HasColumnType("integer")
+                        .HasColumnName("turn");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.Property<int>("VpBlue")
+                        .HasColumnType("integer")
+                        .HasColumnName("vp_blue");
+
+                    b.Property<int>("VpRed")
+                        .HasColumnType("integer")
+                        .HasColumnName("vp_red");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerId", "CreatedAt");
+
+                    b.ToTable("matches_v2", (string)null);
+                });
+
             modelBuilder.Entity("TacticSim.Web.Data.SavedEvent", b =>
                 {
                     b.Property<Guid>("MatchId")
@@ -284,6 +359,80 @@ namespace TacticSim.Web.Migrations
                     b.ToTable("MatchUnits", (string)null);
                 });
 
+            modelBuilder.Entity("TacticSim.Web.Data.TurnOrdersV2", b =>
+                {
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("match_id");
+
+                    b.Property<int>("Turn")
+                        .HasColumnType("integer")
+                        .HasColumnName("turn");
+
+                    b.Property<string>("Side")
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("side");
+
+                    b.Property<Guid?>("CommandId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("command_id");
+
+                    b.Property<string>("Fingerprint")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("fingerprint");
+
+                    b.Property<string>("Orders")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("orders");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_id");
+
+                    b.Property<DateTimeOffset>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("submitted_at");
+
+                    b.HasKey("MatchId", "Turn", "Side");
+
+                    b.HasIndex("OwnerId", "CommandId")
+                        .IsUnique();
+
+                    b.ToTable("turn_orders_v2", (string)null);
+                });
+
+            modelBuilder.Entity("TacticSim.Web.Data.TurnResultV2", b =>
+                {
+                    b.Property<Guid>("MatchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("match_id");
+
+                    b.Property<int>("Turn")
+                        .HasColumnType("integer")
+                        .HasColumnName("turn");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("EndSnapshot")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("end_snapshot");
+
+                    b.Property<string>("Replay")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("replay");
+
+                    b.HasKey("MatchId", "Turn");
+
+                    b.ToTable("turn_results_v2", (string)null);
+                });
+
             modelBuilder.Entity("TacticSim.Web.Data.CommandReceipt", b =>
                 {
                     b.HasOne("TacticSim.Web.Data.SavedMatch", null)
@@ -324,6 +473,24 @@ namespace TacticSim.Web.Migrations
                         .WithMany("Units")
                         .HasForeignKey("MatchId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TacticSim.Web.Data.TurnOrdersV2", b =>
+                {
+                    b.HasOne("TacticSim.Web.Data.MatchV2", null)
+                        .WithMany()
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TacticSim.Web.Data.TurnResultV2", b =>
+                {
+                    b.HasOne("TacticSim.Web.Data.MatchV2", null)
+                        .WithMany()
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

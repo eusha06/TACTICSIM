@@ -39,3 +39,10 @@ Ambiguous spec details, the simplest readable choice made, and why.
   first 4 assigned units. The 3 "likely responses" are all-Hold, all-Overwatch, and a Veteran plan made from
   the enemy's view of what Commander knows. Plans score 50% worst case + 50% average.
 - **Boot Camp's opponent** follows `"redScript": "hold"` in the map file: every Red unit Holds.
+- **The visitor always plays Blue.** Red's orders are planned on the server inside the turn request, from
+  Red's own fog-filtered view, then validated like player orders (an invalid AI order set falls back to Hold).
+- **Current state** = the latest `turn_results_v2.end_snapshot`, or the scenario rebuilt from `ai_seed` before
+  turn 1. `turn_orders_v2` gained `owner_id`, so "command id unique per owner" is a plain unique index.
+- **Idempotent retry** returns the saved outcome of the turn that command played (its replay and end state).
+- **API JSON** uses camelCase with string enums (`"move"`, `"blue"`). `/api/v2/rules` is public; everything
+  else needs the owner cookie, and POSTs need the `X-CSRF-TOKEN` header from the page's antiforgery token.

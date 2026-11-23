@@ -52,6 +52,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 builder.Services.AddSingleton<BrowserOwner>();
 builder.Services.AddScoped<MatchService>();
+builder.Services.AddScoped<MatchV2Service>();
 var connection = builder.Configuration.GetConnectionString("DefaultConnection");
 // Transaction poolers are suitable for gameplay, but migrations need a direct
 // connection for their session-level database lock. Existing setups can keep
@@ -104,6 +105,7 @@ app.UseRouting();
 app.UseAuthorization();
 app.MapStaticAssets();
 app.MapRazorPages().WithStaticAssets();
+ApiV2.Map(app);
 app.MapHealthChecks("/health", new HealthCheckOptions
 {
     ResponseWriter = async (context, report) =>
@@ -120,3 +122,6 @@ app.MapHealthChecks("/health", new HealthCheckOptions
     }
 });
 app.Run();
+
+// Lets the integration tests host the real app in memory.
+public partial class Program;

@@ -21,6 +21,20 @@
   Not done: Docker image build (no local Docker daemon; CI will build it), execution GIF, production backup,
   migration, Render deploy and live verification. These need the user's go-ahead.
   Deploy plan with locally rehearsed upgrade, backup/restore and rollback: `docs/v2/deploy-plan.md`.
+  CI green on PR #1 head `8c8f236` and on the `main` merge `2371044` (run 45165999671): client typecheck/tests/
+  build, all .NET tests, golden-vector drift check, balance smoke run, migrations, production Docker build and
+  the 512 MB container check including the new v2 steps (/play bundle, v2 turn, survival across replacement).
+  Backup gate: the owner reports a Prisma console snapshot taken on 2026-11-23 (not inspected or
+  restore-tested here; no pg_dump file exists, so the dress rehearsal on real data was not run).
+  The upgrade, rollback and dump/restore procedure were rehearsed on local test data only.
+  Deployed by the owner via Render manual deploy. Live `/health` observed healthy at `2371044` (2026-11-23).
+  Live HTTP checks passed: home links /play; /play bundle; rules v1; CSRF refusal; fog at start; Rivergate turn
+  vs Veteran; idempotent retry; 409 stale; plain-English 422; Boot Camp won in 3 turns; second browser 404.
+  Live /play renders the map with no console errors. Not yet checked live: an old v1 save with its original
+  cookie (owner).
+  Live browser click-through (built-in browser): menu → Boot Camp turn 1 → debrief, keyboard focus on Next turn.
+  Live phone check (390 px) found the HUD covering most of the map; fixed after the deploy (compact phone HUD,
+  wider camera bounds), verified locally at 390 px and 1280 px. Needs the next deploy to reach the live site.
 
 ## Release 5 — portfolio and final usability (current)
 

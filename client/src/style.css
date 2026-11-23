@@ -145,11 +145,16 @@ caption { text-align: left; color: var(--muted); padding: 4px 0; } th, td { padd
 @media (max-width: 760px) {
   .topbar { height: auto; flex-wrap: wrap; gap: 6px 10px; padding: 6px 10px; }
   .difficulty { display: none; }
-  .orders { top: auto; bottom: 0; right: 0; left: 0; width: auto; max-height: 34vh; border-radius: 14px 14px 0 0; }
-  .orders ol { max-height: 18vh; }
-  .unit-card { left: 8px; right: 8px; width: auto; bottom: calc(34vh + 6px); padding: 8px 10px; }
-  .unit-card .stats, .unit-card .special { display: none; }
-  .tutorial { top: auto; bottom: calc(34vh + 150px); width: calc(100vw - 16px); min-width: 0; }
+  /* Phone: keep the battlefield visible. Compact sheet at the bottom, short tutorial under the top bar. */
+  .orders { top: auto; bottom: 0; right: 0; left: 0; width: auto; max-height: 26vh; padding: 8px 10px; border-radius: 14px 14px 0 0; }
+  .orders ol { max-height: 10vh; margin: 4px 0; }
+  .orders .row { padding: 4px 8px; } .orders .what, .orders .note { display: none; }
+  .execute { padding: 10px; font-size: 14px; }
+  .unit-card { left: 8px; right: 8px; width: auto; bottom: calc(26vh + 6px); padding: 6px 10px; }
+  .unit-card .stats, .unit-card .special, .unit-card .current { display: none; }
+  .order-buttons button { padding: 4px 2px 3px; } .order-buttons kbd { display: none; }
+  .tutorial { top: 112px; bottom: auto; width: calc(100vw - 16px); min-width: 0; padding: 8px 12px; }
+  .tutorial .eyebrow { display: none; } .tutorial h2 { font-size: 14px; } .tutorial p { font-size: 13px; margin-bottom: 4px; }
   .playback { bottom: 8px; flex-wrap: wrap; justify-content: center; width: calc(100vw - 16px); }
   .ticker { bottom: 110px; }
   .modal h1 { font-size: 30px; }

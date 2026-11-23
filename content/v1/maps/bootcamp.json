@@ -1,0 +1,31 @@
+{
+  "id": "bootcamp",
+  "name": "Boot Camp",
+  "width": 9,
+  "height": 7,
+  "tiles": [
+    "..F...F..",
+    ".......F.",
+    "=========",
+    "...F.....",
+    ".F...TT..",
+    "....F....",
+    "..FF....."
+  ],
+  "objectives": [
+    { "id": "X", "label": "Supply Depot", "col": 6, "row": 3 }
+  ],
+  "deployments": {
+    "blue": [
+      { "unit": "rifle", "col": 1, "row": 4 },
+      { "unit": "armor", "col": 0, "row": 2 }
+    ],
+    "red": [
+      { "unit": "rifle", "col": 7, "row": 3 },
+      { "unit": "recon", "col": 8, "row": 5 }
+    ]
+  },
+  "turnLimit": 8,
+  "vpToWin": 1,
+  "redScript": "hold"
+}

@@ -7,7 +7,7 @@
 - Not deployed. Phase 7 deploy needs a verified production backup and the user's go-ahead.
 - [x] Phase 0 — guardrails: branch, CLAUDE.md, spec in `docs/v2/`, baseline build + 112 tests green.
 - [ ] Phase 1 — optional v1 quick wins (skipped: v2 replaces the v1 play flow; v1 stays as "Classic").
-- [ ] Phase 2 — `TacticSim.Sim` engine + tests + golden vectors.
+- [x] Phase 2 — `TacticSim.Sim` engine + tests + golden vectors (96 tests, 97.5% line coverage).
 - [ ] Phase 3 — AI + balance runner.
 - [ ] Phase 4 — `/api/v2` + persistence.
 - [ ] Phase 5 — Phaser client, playable battle.

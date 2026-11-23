@@ -1,0 +1,44 @@
+{
+  "id": "rivergate",
+  "name": "Rivergate",
+  "width": 15,
+  "height": 11,
+  "tiles": [
+    "..FF...~..FFF..",
+    ".FFF...~...F...",
+    "=======B=======",
+    "..=..F.~.F..=..",
+    "..=.FF.~..TT=..",
+    "..=..T.~.TTT=..",
+    "..=.H..~....=F.",
+    "..=.HH.~..H.=FF",
+    "=======B=======",
+    ".F....F~..F..F.",
+    "..FF...~...FF.."
+  ],
+  "objectives": [
+    { "id": "A", "label": "North Bridge", "col": 7, "row": 2 },
+    { "id": "B", "label": "Comms Outpost", "col": 10, "row": 5 },
+    { "id": "C", "label": "Hill 112", "col": 4, "row": 6 }
+  ],
+  "deployments": {
+    "blue": [
+      { "unit": "rifle", "col": 1, "row": 4 },
+      { "unit": "rifle", "col": 1, "row": 6 },
+      { "unit": "at", "col": 1, "row": 5 },
+      { "unit": "armor", "col": 0, "row": 2 },
+      { "unit": "artillery", "col": 0, "row": 5 },
+      { "unit": "recon", "col": 0, "row": 8 }
+    ],
+    "red": [
+      { "unit": "rifle", "col": 13, "row": 4 },
+      { "unit": "rifle", "col": 13, "row": 6 },
+      { "unit": "at", "col": 13, "row": 5 },
+      { "unit": "armor", "col": 14, "row": 2 },
+      { "unit": "artillery", "col": 14, "row": 5 },
+      { "unit": "recon", "col": 14, "row": 8 }
+    ]
+  },
+  "turnLimit": 12,
+  "vpToWin": 12
+}

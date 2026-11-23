@@ -33,6 +33,13 @@ public static class ApiV2
             }
         });
 
+        // Gives the browser its owner cookie and an antiforgery token for later POSTs. No game state changes.
+        api.MapGet("/session", (HttpContext http, BrowserOwner owner, IAntiforgery antiforgery) =>
+        {
+            owner.EnsureCookie(http);
+            return Ok(new { token = antiforgery.GetAndStoreTokens(http).RequestToken });
+        });
+
         api.MapGet("/rules", () =>
         {
             var content = GameContent.Load();

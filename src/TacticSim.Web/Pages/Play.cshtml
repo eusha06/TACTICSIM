@@ -1,0 +1,22 @@
+@page "/play"
+@model PlayModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#111814" />
+    <meta name="description" content="Rivergate Command: a deterministic simultaneous-turn tactics simulation. Plan, execute, watch the battle unfold." />
+    <title>Rivergate Command · TacticSim</title>
+    <link rel="icon" type="image/svg+xml" href="~/art/favicon.svg" asp-append-version="true" />
+    <link rel="stylesheet" href="~/game/game.css" asp-append-version="true" />
+</head>
+<body>
+    <div id="game-root" aria-label="Battlefield"></div>
+    <noscript><p style="padding:2rem;color:#f2e9d2;font-family:system-ui">Rivergate Command needs JavaScript. The server still decides every rule.</p></noscript>
+    <script type="module" src="~/game/game.js" asp-append-version="true"></script>
+</body>
+</html>

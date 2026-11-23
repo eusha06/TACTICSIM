@@ -101,13 +101,16 @@ public static class Fog
         if (final.IsOver)
         {
             var won = final.Result == (viewer == Side.Blue ? MatchResult.BlueWins : MatchResult.RedWins);
-            var how = final.EndReason switch
+            var line = (final.Result, final.EndReason) switch
             {
-                "annihilation" => "every unit on one side was destroyed",
-                "vp" => $"a side reached {map.VpToWin} VP",
-                _ => $"turn {map.TurnLimit} ended"
+                (MatchResult.Draw, "annihilation") => "Draw: both forces were destroyed.",
+                (MatchResult.Draw, "vp") => $"Draw: both sides reached {map.VpToWin} VP with the score level.",
+                (MatchResult.Draw, _) => $"Draw: turn {map.TurnLimit} ended with the score level.",
+                (_, "annihilation") => won ? "Victory: every enemy unit was destroyed." : "Defeat: your force was destroyed.",
+                (_, "vp") => won ? $"Victory: you reached {map.VpToWin} VP." : $"Defeat: the enemy reached {map.VpToWin} VP.",
+                _ => won ? $"Victory: you led on VP after turn {map.TurnLimit}." : $"Defeat: the enemy led on VP after turn {map.TurnLimit}."
             };
-            lines.Add(final.Result == MatchResult.Draw ? $"Draw: {how} with the score level." : won ? $"Victory: {how}." : $"Defeat: {how}.");
+            lines.Add(line);
         }
 
         int mine = viewer == Side.Blue ? result.VpBlue : result.VpRed, theirs = viewer == Side.Blue ? result.VpRed : result.VpBlue;

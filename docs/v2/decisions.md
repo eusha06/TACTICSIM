@@ -46,3 +46,12 @@ Ambiguous spec details, the simplest readable choice made, and why.
 - **Idempotent retry** returns the saved outcome of the turn that command played (its replay and end state).
 - **API JSON** uses camelCase with string enums (`"move"`, `"blue"`). `/api/v2/rules` is public; everything
   else needs the owner cookie, and POSTs need the `X-CSRF-TOKEN` header from the page's antiforgery token.
+- **Art pipeline:** original SVG lives in code (`client/src/art.ts`) and is rasterized into Phaser textures at
+  boot (2x for crisp zoom). No build-time atlas: ~50 small textures load instantly.
+  ponytail: add an atlas pack step if texture count or load time grows.
+- **Client session:** `GET /api/v2/session` sets the owner cookie and returns the antiforgery request token, so the
+  canvas app (and `npm run dev` through Vite's proxy) can POST with `X-CSRF-TOKEN`.
+- **Replays from the after-action report** rebuild each turn's starting positions from tick 1 (`from` of the first
+  move, plus damage taken on tick 1). Objective flags in that replay show the final state.
+- **Reduced motion** (`prefers-reduced-motion`): no tweens or particles; the turn result appears at once with the
+  full written event log.

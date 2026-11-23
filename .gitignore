@@ -504,3 +504,8 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# v2 client build output (npm run build in client/)
+src/TacticSim.Web/wwwroot/game/
+client/node_modules/
+.claude/

@@ -10,8 +10,12 @@
 - [x] Phase 2 — `TacticSim.Sim` engine + tests + golden vectors (96 tests, 97.5% line coverage).
 - [x] Phase 3 — AI (Recruit/Veteran/Commander) + balance runner; mirrored Veteran 49.6% (see `docs/v2/balance-log.md`).
 - [x] Phase 4 — `/api/v2` + additive `V2Simulation` migration; 11 new PostgreSQL/HTTP tests (ownership, CSRF, idempotency, concurrency, fog leaks, replay determinism, v1 still loads).
-- [ ] Phase 5 — Phaser client, playable battle.
-- [ ] Phase 6 — polish, onboarding, accessibility.
+- [x] Phase 5 — Phaser 4 + Vite + TS client at `/play`: map, camera, minimap, planning UX, playback, debrief, menu. Vitest passes all C# golden vectors.
+- [x] Phase 6 — effects, synthesized audio, Boot Camp, rules cards, tips, keyboard/touch, waking screen, after-action report.
+  Browser check (local, built-in browser, 2026-11-23): menu → Boot Camp won in 3 turns (move, previewed attack, capture) →
+  debrief → after-action report → replay of turn 2 → new Rivergate battle vs Veteran (barrage range ring, out-of-reach
+  reasons, AI took A and B on turn 1) → 390 px phone layout. No console errors observed.
+  Not verified: 60 fps on a mid laptop (the preview pane throttles animation while hidden) and a timed first-time player.
 - [ ] Phase 7 — Docker/CI/README (deploy pending user go-ahead).
 
 ## Release 5 — portfolio and final usability (current)

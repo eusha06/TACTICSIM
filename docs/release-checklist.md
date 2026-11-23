@@ -31,7 +31,10 @@
   Live HTTP checks passed: home links /play; /play bundle; rules v1; CSRF refusal; fog at start; Rivergate turn
   vs Veteran; idempotent retry; 409 stale; plain-English 422; Boot Camp won in 3 turns; second browser 404.
   Live /play renders the map with no console errors. Not yet checked live: an old v1 save with its original
-  cookie (owner), the full menu/Boot Camp click-through in a browser, phone layout.
+  cookie (owner).
+  Live browser click-through (built-in browser): menu → Boot Camp turn 1 → debrief, keyboard focus on Next turn.
+  Live phone check (390 px) found the HUD covering most of the map; fixed after the deploy (compact phone HUD,
+  wider camera bounds), verified locally at 390 px and 1280 px. Needs the next deploy to reach the live site.
 
 ## Release 5 — portfolio and final usability (current)
 

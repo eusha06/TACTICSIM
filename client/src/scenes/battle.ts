@@ -103,12 +103,14 @@ export class BattleScene extends Phaser.Scene {
   private setupCamera() {
     const { width, height } = worldSize(this.board);
     const cam = this.cameras.main;
-    cam.setBounds(-width * 0.4, -height * 0.4, width * 1.8, height * 1.8);
+    // Generous pan limits: on a tall phone screen the view is bigger than the map, and tight bounds pin it to the top.
+    cam.setBounds(-width * 2, -height * 2, width * 5, height * 5);
     const fit = () => {
       const narrow = this.scale.width < 760;
       const usableW = this.scale.width - (narrow ? 0 : 330), usableH = this.scale.height - (narrow ? 190 : 140);
       cam.setZoom(Phaser.Math.Clamp(Math.min(usableW / width, usableH / height), 0.45, 1.6));
-      cam.centerOn(width / 2 + (narrow ? 0 : 150 / cam.zoom), height / 2 - (narrow ? 40 : 0) / cam.zoom);
+      // Desktop: shift left of the orders panel. Phone: sit between the tutorial and the unit card.
+      cam.centerOn(width / 2 + (narrow ? 0 : 150 / cam.zoom), height / 2 + (narrow ? 30 : 0) / cam.zoom);
       const mw = narrow ? 0 : 210, mh = Math.round(mw * (height / width));
       this.minimap.setViewport(this.scale.width - mw - 14, this.scale.height - mh - 14, mw, mh).setVisible(!narrow);
       this.minimap.setZoom(mw / width).centerOn(width / 2, height / 2);

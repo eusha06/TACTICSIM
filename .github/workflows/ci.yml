@@ -44,14 +44,31 @@ jobs:
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           dotnet-version: '10.0.x'
+      - name: Install Node 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - name: Client typecheck, golden-vector tests and build
+        working-directory: client
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
+          npm run build
       - name: Restore dependencies
         run: dotnet restore TacticSim.sln
       - name: Build Release
         run: dotnet build TacticSim.sln --configuration Release --no-restore --warnaserror
       - name: Run engine and PostgreSQL tests
         run: dotnet test TacticSim.sln --configuration Release --no-build --no-restore --nologo
-      - name: Verify tutorial transitions (no npm or frontend build)
+      - name: Golden vectors are up to date (engine and client agree)
+        run: git diff --exit-code -- client/test/vectors
+      - name: Verify classic v1 tutorial transitions
         run: node --test scripts/tutorial.test.cjs scripts/presentation.test.cjs
+      - name: AI balance smoke run (mirrored Veteran)
+        run: dotnet run --project tools/TacticSim.Balance --configuration Release --no-build -- --games 40
       - name: Verify and apply migrations
         run: |
           dotnet tool restore --tool-manifest dotnet-tools.json

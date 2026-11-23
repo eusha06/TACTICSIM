@@ -1,5 +1,21 @@
 # Portfolio demo and CV text
 
+## v2: Rivergate Command (CV text)
+
+**TacticSim: Rivergate Command — C#/.NET simulation engine + TypeScript client**
+
+Built a deterministic simultaneous-turn (WEGO) tactical simulation. A pure C# engine resolves
+orders over 8 ticks (movement with tick costs, collisions, contact, line of sight and server-side
+fog of war, simultaneous fire) and drives a fog-fair utility AI with three difficulty levels and
+an AI-vs-AI balance runner. ASP.NET Core serves an idempotent, antiforgery-protected JSON API
+with PostgreSQL persistence (EF Core, additive migrations, replay-determinism tests). A Phaser 4 /
+TypeScript client mirrors the preview rules and is checked against golden vectors exported from the
+C# tests. Not yet deployed; describe it as a local build until the release checklist records a deploy.
+
+---
+
+# v1 (Classic) demo and CV text
+
 ## 60-second demo
 
 Preparation: wake the free host before presenting. Keep one unfinished match

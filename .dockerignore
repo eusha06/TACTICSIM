@@ -7,6 +7,15 @@
 !src/TacticSim.Core/**
 !src/TacticSim.Web/
 !src/TacticSim.Web/**
+!src/TacticSim.Sim/
+!src/TacticSim.Sim/**
+!content/
+!content/**
+!client/
+!client/**
+client/node_modules/
+client/test/
+**/wwwroot/game/
 **/bin/
 **/obj/
 **/.env*

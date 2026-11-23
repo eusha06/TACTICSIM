@@ -20,3 +20,15 @@ checklist. Re-capture affected images when changing the implemented UI.
 
 Desktop captures use the real browser viewport (939 CSS pixels, device scale 2).
 375×667 iPhone SE emulation was additionally inspected; no physical-device claim.
+
+## v2 "Rivergate Command" captures (2026-11-23)
+
+Captured with the Claude desktop app's built-in browser from the locally running v2 branch
+(viewport emulated at 1280×800, saved downscaled). Real matches played through `/api/v2`;
+no database edits, no compositing.
+
+- `v2-bootcamp.jpg`: Boot Camp step 1, Armor selected, target hex highlighted, fog over the east.
+- `v2-combat-preview.png`: hovering the enemy Rifle: exact damage card and green line of sight.
+- `v2-execution.jpg`: execution playback, tick counter and ticker after the Armor's tick-1 shot.
+- `v2-after-action.jpg`: after-action report of that Boot Camp win (VP graph, kills, losses, replay).
+- `v2-rivergate.jpg`: start of a Rivergate battle against the Veteran AI.

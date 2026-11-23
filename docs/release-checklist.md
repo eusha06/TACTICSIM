@@ -24,7 +24,10 @@
   CI green on PR #1 head `8c8f236` and on the `main` merge `2371044` (run 45165999671): client typecheck/tests/
   build, all .NET tests, golden-vector drift check, balance smoke run, migrations, production Docker build and
   the 512 MB container check including the new v2 steps (/play bundle, v2 turn, survival across replacement).
-  Next gate: production backup (owner), then manual Render deploy of `2371044`.
+  Backup gate: the owner reports a Prisma console snapshot taken on 2026-11-23 (not inspected or
+  restore-tested here; no pg_dump file exists, so the dress rehearsal on real data was not run).
+  The upgrade, rollback and dump/restore procedure were rehearsed on local test data only.
+  Next gate: manual Render deploy of `2371044`, then the live checks in `docs/v2/deploy-plan.md` §4.
 
 ## Release 5 — portfolio and final usability (current)
 

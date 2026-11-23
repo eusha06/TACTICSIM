@@ -27,7 +27,11 @@
   Backup gate: the owner reports a Prisma console snapshot taken on 2026-11-23 (not inspected or
   restore-tested here; no pg_dump file exists, so the dress rehearsal on real data was not run).
   The upgrade, rollback and dump/restore procedure were rehearsed on local test data only.
-  Next gate: manual Render deploy of `2371044`, then the live checks in `docs/v2/deploy-plan.md` §4.
+  Deployed by the owner via Render manual deploy. Live `/health` observed healthy at `2371044` (2026-11-23).
+  Live HTTP checks passed: home links /play; /play bundle; rules v1; CSRF refusal; fog at start; Rivergate turn
+  vs Veteran; idempotent retry; 409 stale; plain-English 422; Boot Camp won in 3 turns; second browser 404.
+  Live /play renders the map with no console errors. Not yet checked live: an old v1 save with its original
+  cookie (owner), the full menu/Boot Camp click-through in a browser, phone layout.
 
 ## Release 5 — portfolio and final usability (current)
 

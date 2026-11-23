@@ -20,6 +20,7 @@
   Vitest/build + golden-vector drift check + balance smoke run, home/nav links to `/play`, README and portfolio.
   Not done: Docker image build (no local Docker daemon; CI will build it), execution GIF, production backup,
   migration, Render deploy and live verification. These need the user's go-ahead.
+  Deploy plan with locally rehearsed upgrade, backup/restore and rollback: `docs/v2/deploy-plan.md`.
 
 ## Release 5 — portfolio and final usability (current)
 

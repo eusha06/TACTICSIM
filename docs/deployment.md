@@ -334,3 +334,9 @@ The Down migration deliberately refuses to drop mission state. Fix forward;
 restoring a verified backup is an explicit recovery operation that loses later
 writes and requires an operator's separate recovery decision. Never delete or
 reseed production as a rollback shortcut.
+
+## Release 6 (v2 Rivergate Command) additive upgrade
+
+Follow [the v2 deploy plan](v2/deploy-plan.md). It adds only the `V2Simulation` migration (three new
+tables, two indexes) and a Node build stage in the Dockerfile; environment variables, keys and the
+start script are unchanged. Upgrade, backup/restore and app-only rollback were rehearsed locally.
